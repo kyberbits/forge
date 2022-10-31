@@ -7,7 +7,8 @@ import (
 
 func HTTPSpaHandler(fileSystem http.FileSystem, entryPoint string, headerChanger func(http.Header)) *HTTPStatic {
 	return &HTTPStatic{
-		FileSystem: fileSystem,
+		FileSystem:   fileSystem,
+		CacheControl: "must-revalidate, public, max-age=3600",
 		NotFoundHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			file, _ := fileSystem.Open(entryPoint)
 
