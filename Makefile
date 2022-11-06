@@ -1,4 +1,4 @@
-.PHONY: full build test test-go lint lint-go fix fix-go watch clean
+.PHONY: full build test test-go lint lint-go fix fix-go clean
 
 SHELL=/bin/bash -o pipefail
 $(shell git config core.hooksPath ops/git-hooks)
@@ -18,6 +18,7 @@ test-go:
 	@go install github.com/boumenot/gocover-cobertura@latest
 	go test -race -cover -coverprofile var/coverage/go/profile.txt ./...
 	@go tool cover -func var/coverage/go/profile.txt | awk '/^total/{print $$1 " " $$3}'
+	@go tool cover -html var/coverage/go/profile.txt -o var/coverage/go/coverage.html
 	@gocover-cobertura < var/coverage/go/profile.txt > var/coverage/go/cobertura-coverage.xml
 
 ## Lint the project
@@ -38,10 +39,6 @@ fix-go:
 	go mod tidy
 	gofmt -s -w .
 	goimports -w .
-
-## Watch the project
-watch:
-	make -j0 
 
 ## Clean the project
 clean:
