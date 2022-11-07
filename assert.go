@@ -20,13 +20,13 @@ func Assert(expected interface{}, actual interface{}) error {
 		expected = expectedErr.Error()
 	}
 
-	if !reflect.DeepEqual(expected, actual) {
+	if !reflect.DeepEqual(fmt.Sprint(expected), fmt.Sprint(actual)) {
 		actualBytes, _ := json.Marshal(AssertFailure{
 			Expected: expected,
 			Actual:   actual,
 		})
 
-		return fmt.Errorf("not equal... %s", string(actualBytes))
+		return fmt.Errorf("%s", string(actualBytes))
 	}
 
 	return nil
