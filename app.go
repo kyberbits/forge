@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 type App interface {
@@ -25,9 +26,12 @@ func Run(ctx context.Context, app WebApp) error {
 	go app.Background(ctx)
 
 	httpServer := &http.Server{
-		Addr:     app.ListenAddress(),
-		Handler:  app.Handler(),
-		ErrorLog: app.Logger().StandardLogger(),
+		Addr:         app.ListenAddress(),
+		Handler:      app.Handler(),
+		ErrorLog:     app.Logger().StandardLogger(),
+		ReadTimeout:  time.Second * 30,
+		WriteTimeout: time.Second * 30,
+		IdleTimeout:  time.Second * 60,
 	}
 
 	app.Logger().Info("Serving web application", map[string]interface{}{
