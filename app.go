@@ -27,7 +27,7 @@ func Run(ctx context.Context, app WebApp) error {
 
 	httpServer := &http.Server{
 		Addr:         app.ListenAddress(),
-		Handler:      app.Handler(),
+		Handler:      http.TimeoutHandler(app.Handler(), time.Second*30, "Timeout"),
 		ErrorLog:     app.Logger().StandardLogger(),
 		ReadTimeout:  time.Second * 30,
 		WriteTimeout: time.Second * 30,
