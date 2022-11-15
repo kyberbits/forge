@@ -7,7 +7,7 @@ import (
 )
 
 type Log struct {
-	Timestamp time.Time
+	Timestamp time.Time              `json:"timestamp"`
 	Severity  string                 `json:"severity"`
 	Message   string                 `json:"message"`
 	Context   map[string]interface{} `json:"context"`
