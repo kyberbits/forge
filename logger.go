@@ -3,12 +3,14 @@ package forge
 import (
 	"encoding/json"
 	"log"
+	"time"
 )
 
 type Log struct {
-	Severity string                 `json:"severity"`
-	Message  string                 `json:"message"`
-	Context  map[string]interface{} `json:"context"`
+	Timestamp time.Time
+	Severity  string                 `json:"severity"`
+	Message   string                 `json:"message"`
+	Context   map[string]interface{} `json:"context"`
 }
 
 type Logger interface {
@@ -65,9 +67,10 @@ func (logger *LoggerJSON) log(severity string, message string, context map[strin
 	}
 
 	logger.Encoder.Encode(Log{
-		Severity: severity,
-		Message:  message,
-		Context:  context,
+		Timestamp: time.Now(),
+		Severity:  severity,
+		Message:   message,
+		Context:   context,
 	})
 }
 
