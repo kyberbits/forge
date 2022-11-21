@@ -58,6 +58,7 @@ func TestLogger(t *testing.T) {
 	// Fix log
 	expected.Context["requestID"] = "default"
 	actual.Context["requestID"] = "default"
+	expected.Timestamp = actual.Timestamp
 
 	if err := forge.Assert(expected, actual); err != nil {
 		t.Error(err)
