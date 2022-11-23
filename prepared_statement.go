@@ -44,7 +44,7 @@ func (preparedStatement *PreparedStatement) setQuery(queryText string) {
 				character, width = utf8.DecodeRuneInString(queryText[i:])
 				i += width
 
-				if unicode.IsLetter(character) || unicode.IsDigit(character) {
+				if unicode.IsLetter(character) || unicode.IsDigit(character) || character == '_' {
 					parameterBuilder.WriteString(string(character))
 				} else {
 					break

@@ -26,9 +26,9 @@ func TestPreparedStatementBasic(t *testing.T) {
 
 func TestPreparedStatementComplex(t *testing.T) {
 	testPreparedStatement(t, PreparedStatementTestCase{
-		Query: "SELECT * FROM users WHERE firstName = :name OR lastName = :name",
+		Query: "SELECT * FROM users WHERE firstName = :first_name OR lastName = :first_name",
 		Parameters: map[string]interface{}{
-			"name": "Joe",
+			"first_name": "Joe",
 		},
 		ExpectedQuery:      "SELECT * FROM users WHERE firstName = ? OR lastName = ?",
 		ExpectedParameters: []interface{}{"Joe", "Joe"},

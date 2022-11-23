@@ -24,7 +24,7 @@ func MockRoundTripperQueue(t *testing.T, queue []MockRoundTripFunc) http.RoundTr
 			}()
 
 			if len(queue) <= runNumber {
-				panic("empty queue")
+				t.Fatal("empty queue")
 			}
 
 			return queue[runNumber](t, r)
