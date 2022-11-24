@@ -3,6 +3,7 @@ package forge_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"testing"
@@ -60,7 +61,7 @@ func TestLogger(t *testing.T) {
 	actual.Context["requestID"] = "default"
 	expected.Timestamp = actual.Timestamp
 
-	if err := forge.Assert(expected, actual); err != nil {
+	if err := forge.Assert(fmt.Sprint(expected), fmt.Sprint(actual)); err != nil {
 		t.Error(err)
 	}
 }

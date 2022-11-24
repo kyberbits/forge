@@ -11,7 +11,7 @@ func TestAssert(t *testing.T) {
 	// LOL, this test is funny!
 
 	{ // Equal
-		expected := errors.New("{\"Expected\":false,\"Actual\":true}")
+		expected := errors.New("{\n\t\"Expected\": false,\n\t\"Actual\": true\n}")
 		actual := forge.Assert(false, true)
 		if err := forge.Assert(expected, actual); err != nil {
 			t.Error(err)
