@@ -22,8 +22,41 @@ type WebApp interface {
 	Background(ctx context.Context)
 }
 
+func KeepRunning(ctx context.Context, app App, action func(ctx context.Context), coolDown time.Duration) {
+	defer func() {
+		if r := recover(); r != nil {
+			if err, ok := r.(error); ok {
+				app.Logger().Critical("Panic Err", map[string]any{
+					"err": err,
+				})
+			} else {
+				app.Logger().Critical("Panic Err", map[string]any{
+					"err": r,
+				})
+			}
+
+			select {
+			case <-time.After(coolDown):
+				KeepRunning(ctx, app, action, coolDown)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	action(ctx)
+
+	select {
+	case <-time.After(coolDown):
+		KeepRunning(ctx, app, action, coolDown)
+	case <-ctx.Done():
+		return
+	}
+
+}
+
 func Run(ctx context.Context, app WebApp) error {
-	go app.Background(ctx)
+	go KeepRunning(ctx, app, app.Background, time.Second*5)
 
 	httpServer := &http.Server{
 		Addr:         app.ListenAddress(),
