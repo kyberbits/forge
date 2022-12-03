@@ -1,72 +1,141 @@
 package forge
 
 import (
+	"context"
 	"encoding/json"
+	"io"
 	"log"
+	"net/http"
 	"time"
 )
 
-type Log struct {
-	Timestamp time.Time              `json:"timestamp"`
-	Severity  string                 `json:"severity"`
-	Message   string                 `json:"message"`
-	Context   map[string]interface{} `json:"context"`
+const (
+	LevelCritical = "CRITICAL"
+	LevelError    = "ERROR"
+	LevelWarning  = "WARNING"
+	LevelInfo     = "INFO"
+	LevelDebug    = "DEBUG"
+)
+
+type LogSupplementer func(
+	logEntry *LogEntry,
+	ctx context.Context,
+	r *http.Request,
+)
+
+func NewLogger(
+	channel string,
+	writer io.Writer,
+	supplementer LogSupplementer,
+) *Logger {
+	return &Logger{
+		channel:      channel,
+		encoder:      json.NewEncoder(writer),
+		supplementer: supplementer,
+	}
 }
 
-type Logger interface {
-	Critical(message string, context map[string]interface{})
-	Error(message string, context map[string]interface{})
-	Warning(message string, context map[string]interface{})
-	Info(message string, context map[string]interface{})
-	Debug(message string, context map[string]interface{})
-	StandardLogger() *log.Logger
+type Logger struct {
+	channel      string
+	encoder      *json.Encoder
+	supplementer LogSupplementer
 }
 
-type LoggerJSON struct {
-	Encoder *json.Encoder
+func (logger *Logger) Copy(newChannel string) *Logger {
+	return &Logger{
+		channel:      newChannel,
+		encoder:      logger.encoder,
+		supplementer: logger.supplementer,
+	}
 }
 
-func (logger *LoggerJSON) Critical(message string, context map[string]interface{}) {
-	logger.log("CRITICAL", message, context)
-}
-
-func (logger *LoggerJSON) Error(message string, context map[string]interface{}) {
-	logger.log("ERROR", message, context)
-}
-
-func (logger *LoggerJSON) Warning(message string, context map[string]interface{}) {
-	logger.log("WARNING", message, context)
-}
-
-func (logger *LoggerJSON) Info(message string, context map[string]interface{}) {
-	logger.log("INFO", message, context)
-}
-
-func (logger *LoggerJSON) Debug(message string, context map[string]interface{}) {
-	logger.log("DEBUG", message, context)
-}
-
-func (logger *LoggerJSON) log(severity string, message string, context map[string]interface{}) {
-	if context == nil {
-		context = map[string]interface{}{}
+func (logger *Logger) Log(
+	ctx context.Context,
+	level string,
+	message string,
+	extras map[string]any,
+) {
+	// Make sure extras is initialized
+	if extras == nil {
+		extras = map[string]any{}
 	}
 
-	logger.Encoder.Encode(Log{
+	r := getContextRequest(ctx)
+
+	entry := LogEntry{
+		Channel:   logger.channel,
 		Timestamp: time.Now(),
-		Severity:  severity,
+		Level:     level,
 		Message:   message,
-		Context:   context,
-	})
+		Extras:    extras,
+		ContextID: getContextID(ctx),
+	}
+
+	// Supplement the logger if there is one
+	if logger.supplementer != nil {
+		logger.supplementer(&entry, ctx, r)
+	}
+
+	logger.encoder.Encode(entry)
 }
 
-func (logger *LoggerJSON) Write(b []byte) (int, error) {
-	logger.Error("Standard Library Log", map[string]interface{}{
+func (logger *Logger) Critical(
+	cxt context.Context,
+	message string,
+	extras map[string]any,
+) {
+	logger.Log(cxt, LevelCritical, message, extras)
+}
+
+func (logger *Logger) Error(
+	cxt context.Context,
+	message string,
+	extras map[string]any,
+) {
+	logger.Log(cxt, LevelError, message, extras)
+}
+
+func (logger *Logger) Warning(
+	cxt context.Context,
+	message string,
+	extras map[string]any,
+) {
+	logger.Log(cxt, LevelWarning, message, extras)
+}
+
+func (logger *Logger) Info(
+	cxt context.Context,
+	message string,
+	extras map[string]any,
+) {
+	logger.Log(cxt, LevelInfo, message, extras)
+}
+
+func (logger *Logger) Debug(
+	cxt context.Context,
+	message string,
+	extras map[string]any,
+) {
+	logger.Log(cxt, LevelDebug, message, extras)
+}
+
+func (logger *Logger) Write(b []byte) (int, error) {
+	logger.Error(nil, "Standard Library Log", map[string]interface{}{
 		"log": string(b),
 	})
 
-	return 0, nil
+	return len(b), nil
 }
 
-func (logger *LoggerJSON) StandardLogger() *log.Logger {
+func (logger *Logger) StandardLogger() *log.Logger {
 	return log.New(logger, "", 0)
+}
+
+type LogEntry struct {
+	Timestamp time.Time      `json:"@timestamp"`
+	Channel   string         `json:"channel"`
+	Level     string         `json:"level"`
+	Message   string         `json:"message"`
+	Extras    map[string]any `json:"extras"`
+	ContextID string         `json:"context_id"`
 }

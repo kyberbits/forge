@@ -9,7 +9,7 @@ import (
 
 type App interface {
 	// The Logger to be used
-	Logger() Logger
+	Logger() *Logger
 }
 
 type WebApp interface {
@@ -26,11 +26,11 @@ func KeepRunning(ctx context.Context, app App, action func(ctx context.Context),
 	defer func() {
 		if r := recover(); r != nil {
 			if err, ok := r.(error); ok {
-				app.Logger().Critical("Panic Err", map[string]any{
+				app.Logger().Error(ctx, "Panic Err", map[string]any{
 					"err": err,
 				})
 			} else {
-				app.Logger().Critical("Panic Err", map[string]any{
+				app.Logger().Error(ctx, "Panic Err", map[string]any{
 					"err": r,
 				})
 			}
@@ -67,12 +67,12 @@ func Run(ctx context.Context, app WebApp) error {
 		IdleTimeout:  time.Second * 60,
 	}
 
-	app.Logger().Info("Serving web application", map[string]interface{}{
+	app.Logger().Info(ctx, "Serving web application", map[string]interface{}{
 		"listen": fmt.Sprintf("http://%s", app.ListenAddress()),
 	})
 
 	if err := httpServer.ListenAndServe(); err != nil {
-		app.Logger().Critical("Webserver failed to start", map[string]interface{}{
+		app.Logger().Critical(ctx, "Webserver failed to start", map[string]interface{}{
 			"addr": app.ListenAddress(),
 			"err":  err,
 		})

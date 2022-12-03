@@ -1,18 +1,9 @@
 package forge
 
 import (
-	"context"
 	"net/http"
 	"time"
-
-	"github.com/google/uuid"
 )
-
-// httpLoggerRequestID is the type used for storing the request id key
-type httpLoggerRequestID string
-
-// httpLoggerRequestIDKey is the "string" key is used for storing the request id
-const httpLoggerRequestIDKey httpLoggerRequestID = "forge-request-id"
 
 type HTTPLogger struct {
 	Logger  Logger
@@ -24,20 +15,25 @@ func (httpLogger *HTTPLogger) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		ResponseWriter: w,
 		ResponseCode:   200,
 	}
-	requestWithID := httpLoggerAddRequestID(r)
+	r = addContextValuesToRequest(r)
 
 	startTime := time.Now()
-	httpLogger.Handler.ServeHTTP(recorder, requestWithID)
+	httpLogger.Handler.ServeHTTP(recorder, r)
 	duration := time.Since(startTime)
 
-	httpLogger.Logger.Info("HTTP Request", map[string]interface{}{
-		"requestMethod": r.Method,
-		"requestPath":   r.URL.Path,
-		"requestID":     HTTPLoggerGetRequestID(requestWithID),
-		"requestQuery":  r.URL.Query().Encode(),
-		"responseCode":  recorder.ResponseCode,
-		"handleTime":    duration.Milliseconds(),
-	})
+	// Log the completed request
+	httpLogger.Logger.Info(
+		r.Context(),
+		"HTTP Request",
+		map[string]interface{}{
+			"requestAddr":   getRemoteAddr(r),
+			"requestMethod": r.Method,
+			"requestPath":   r.URL.Path,
+			"requestQuery":  r.URL.Query().Encode(),
+			"responseCode":  recorder.ResponseCode,
+			"handleTime":    duration.Milliseconds(),
+		},
+	)
 }
 
 type statusRecorder struct {
@@ -50,23 +46,11 @@ func (recorder *statusRecorder) WriteHeader(status int) {
 	recorder.ResponseWriter.WriteHeader(status)
 }
 
-// HTTPLoggerGetRequestID gets the request ID off of the request if there is one
-func HTTPLoggerGetRequestID(r *http.Request) string {
-	if r == nil {
-		return ""
+func getRemoteAddr(r *http.Request) string {
+	// The X-FORWARDED-FOR header is the de-facto standard header for identifying the originating IP address of a client connecting
+	// to a web server through an HTTP proxy or a load balancer. https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For
+	if r.Header.Get("X-Forwarded-For") != "" {
+		return r.Header.Get("X-Forwarded-For")
 	}
-
-	requestIDRaw := r.Context().Value(httpLoggerRequestIDKey)
-	requestID, ok := requestIDRaw.(string)
-	if !ok {
-		return ""
-	}
-
-	return requestID
-}
-
-func httpLoggerAddRequestID(r *http.Request) *http.Request {
-	requestID := uuid.New()
-	ctx := context.WithValue(r.Context(), httpLoggerRequestIDKey, requestID.String())
-	return r.WithContext(ctx)
+	return r.RemoteAddr
 }
