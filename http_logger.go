@@ -6,7 +6,7 @@ import (
 )
 
 type HTTPLogger struct {
-	Logger  Logger
+	Logger  *Logger
 	Handler http.Handler
 }
 

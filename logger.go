@@ -68,7 +68,7 @@ func (logger *Logger) Log(
 		Level:     level,
 		Message:   message,
 		Extras:    extras,
-		ContextID: getContextID(ctx),
+		ContextID: GetContextID(ctx),
 	}
 
 	// Supplement the logger if there is one

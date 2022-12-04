@@ -12,7 +12,12 @@ type contextKeyType string
 const contextIDKey contextKeyType = "forge-context-id"
 const contextHTTPRequestKey contextKeyType = "forge-request"
 
-func getContextID(ctx context.Context) string {
+func AddContextID(ctx context.Context) context.Context {
+	ctx = context.WithValue(ctx, contextIDKey, uuid.New().String())
+	return ctx
+}
+
+func GetContextID(ctx context.Context) string {
 	rawValue := ctx.Value(contextIDKey)
 	contextID, ok := rawValue.(string)
 	if !ok {
@@ -30,11 +35,6 @@ func getContextRequest(ctx context.Context) *http.Request {
 	}
 
 	return httpRequest
-}
-
-func AddContextID(ctx context.Context) context.Context {
-	ctx = context.WithValue(ctx, contextIDKey, uuid.New().String())
-	return ctx
 }
 
 func addContextValuesToRequest(r *http.Request) *http.Request {

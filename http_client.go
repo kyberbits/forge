@@ -2,6 +2,7 @@ package forge
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -41,6 +42,7 @@ func (httpClient *HTTPClient) Do(request *http.Request) (*http.Response, error) 
 	// Copy the body so we can re-write it to the response
 	bodyBytes, _ := io.ReadAll(response.Body)
 	response.Body.Close()
+
 	response.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	// Run the ErrorCheck func
@@ -55,6 +57,7 @@ func (httpClient *HTTPClient) Do(request *http.Request) (*http.Response, error) 
 }
 
 func (httpClient *HTTPClient) Request(
+	ctx context.Context,
 	method string,
 	url string,
 	payload interface{},
@@ -72,6 +75,8 @@ func (httpClient *HTTPClient) Request(
 	if err != nil {
 		return err
 	}
+
+	request = request.WithContext(ctx)
 
 	// Execute the http.Request
 	response, err := httpClient.Do(request)
