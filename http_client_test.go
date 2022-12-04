@@ -1,6 +1,7 @@
 package forge_test
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"os"
@@ -52,7 +53,7 @@ func TestHTTPClientSuccess(t *testing.T) {
 	}
 
 	target := Target{}
-	if err := client.Request(http.MethodGet, "/", nil, &target); err != nil {
+	if err := client.Request(context.Background(), http.MethodGet, "/", nil, &target); err != nil {
 		t.Fatal(err)
 	}
 

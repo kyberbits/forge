@@ -16,7 +16,7 @@ func TestLoggerMiddleware(t *testing.T) {
 	buffer := bytes.NewBuffer([]byte{})
 
 	httpLogger := &forge.HTTPLogger{
-		Logger: *forge.NewLogger(
+		Logger: forge.NewLogger(
 			"http",
 			buffer,
 			func(logEntry *forge.LogEntry, ctx context.Context, r *http.Request) {

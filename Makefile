@@ -1,4 +1,4 @@
-.PHONY: full build test test-go lint lint-go fix fix-go clean
+.PHONY: full build test test-go lint lint-go fix fix-go docs-go clean
 
 SHELL=/bin/bash -o pipefail
 $(shell git config core.hooksPath ops/git-hooks)
@@ -39,6 +39,12 @@ fix-go:
 	go mod tidy
 	gofmt -s -w .
 	goimports -w .
+
+## Run the godoc server
+docs-go:
+	go install golang.org/x/tools/cmd/godoc@latest
+	@echo "listening on http://127.0.0.1:6060/pkg/github.com/kyberbits/forge"
+	godoc -http=127.0.0.1:6060
 
 ## Clean the project
 clean:

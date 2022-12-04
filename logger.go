@@ -120,7 +120,7 @@ func (logger *Logger) Debug(
 }
 
 func (logger *Logger) Write(b []byte) (int, error) {
-	logger.Error(nil, "Standard Library Log", map[string]interface{}{
+	logger.Error(context.Background(), "Standard Library Log", map[string]interface{}{
 		"log": string(b),
 	})
 
