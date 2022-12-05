@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"html/template"
 	"io"
 	"net/http"
 )
@@ -61,4 +62,20 @@ func (handlerContext *HandlerContext) RespondJSON(status int, v any) {
 func (handlerContext *HandlerContext) RespondHTML(status int, s string) {
 	handlerContext.Writer.WriteHeader(status)
 	handlerContext.Writer.Write([]byte(s))
+}
+
+func (handlerContext *HandlerContext) ExecuteTemplate(tmpl *template.Template, data any) {
+	bodyBuffer := bytes.NewBuffer([]byte{})
+	if err := tmpl.Execute(bodyBuffer, data); err != nil {
+		http.Error(handlerContext.Writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	responseBytes, err := io.ReadAll(bodyBuffer)
+	if err != nil {
+		http.Error(handlerContext.Writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	handlerContext.RespondHTML(http.StatusOK, string(responseBytes))
 }
