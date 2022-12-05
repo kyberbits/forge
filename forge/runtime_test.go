@@ -4,7 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kyberbits/forge"
+	"github.com/kyberbits/forge/forge"
+	"github.com/kyberbits/forge/forgetest"
 )
 
 func TestRuntime(t *testing.T) {
@@ -25,7 +26,7 @@ func TestRuntime(t *testing.T) {
 		"LOCAL":   "local",
 	}
 
-	if err := forge.Assert(expected, actual); err != nil {
+	if err := forgetest.Assert(expected, actual); err != nil {
 		t.Error(err)
 	}
 }

@@ -1,4 +1,4 @@
-package forge
+package forgeutils
 
 import (
 	"context"
@@ -12,12 +12,12 @@ type contextKeyType string
 const contextIDKey contextKeyType = "forge-context-id"
 const contextHTTPRequestKey contextKeyType = "forge-request"
 
-func AddContextID(ctx context.Context) context.Context {
+func ContextAddID(ctx context.Context) context.Context {
 	ctx = context.WithValue(ctx, contextIDKey, uuid.New().String())
 	return ctx
 }
 
-func GetContextID(ctx context.Context) string {
+func ContextGetID(ctx context.Context) string {
 	rawValue := ctx.Value(contextIDKey)
 	contextID, ok := rawValue.(string)
 	if !ok {
@@ -27,7 +27,7 @@ func GetContextID(ctx context.Context) string {
 	return contextID
 }
 
-func getContextRequest(ctx context.Context) *http.Request {
+func ContextGetRequest(ctx context.Context) *http.Request {
 	rawValue := ctx.Value(contextHTTPRequestKey)
 	httpRequest, ok := rawValue.(*http.Request)
 	if !ok {
@@ -37,9 +37,9 @@ func getContextRequest(ctx context.Context) *http.Request {
 	return httpRequest
 }
 
-func addContextValuesToRequest(r *http.Request) *http.Request {
+func ContextAddToRequest(r *http.Request) *http.Request {
 	ctx := r.Context()
-	ctx = AddContextID(ctx)
+	ctx = ContextAddID(ctx)
 	ctx = context.WithValue(ctx, contextHTTPRequestKey, r) // TODO: this seems wrong
 	return r.WithContext(ctx)
 }

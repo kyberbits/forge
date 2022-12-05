@@ -6,12 +6,18 @@ import (
 	"io/fs"
 )
 
+func NewResources(fileSystems []fs.FS) *Resources {
+	return &Resources{
+		fileSystems: fileSystems,
+	}
+}
+
 type Resources struct {
-	FileSystems []fs.FS
+	fileSystems []fs.FS
 }
 
 func (resources *Resources) MustOpenDirectory(dir string) fs.FS {
-	for i, fileSystem := range resources.FileSystems {
+	for i, fileSystem := range resources.fileSystems {
 		_, openTestErr := fileSystem.Open(dir)
 		if openTestErr != nil {
 			continue
@@ -22,7 +28,7 @@ func (resources *Resources) MustOpenDirectory(dir string) fs.FS {
 			return directory
 		}
 
-		if i == (len(resources.FileSystems) - 1) {
+		if i == (len(resources.fileSystems) - 1) {
 			panic(err)
 		}
 	}
@@ -31,14 +37,14 @@ func (resources *Resources) MustOpenDirectory(dir string) fs.FS {
 }
 
 func (resources *Resources) MustOpenFile(fileName string) fs.File {
-	for i, fileSystem := range resources.FileSystems {
+	for i, fileSystem := range resources.fileSystems {
 		file, err := fileSystem.Open(fileName)
 		if err == nil {
 			return file
 		}
 
 		// If the last filesystem, panic
-		if i == (len(resources.FileSystems) - 1) {
+		if i == (len(resources.fileSystems) - 1) {
 			panic(err)
 		}
 	}

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/kyberbits/forge"
+	"github.com/kyberbits/forge/forge"
 )
 
 func TestRouter(t *testing.T) {
@@ -16,14 +16,17 @@ func TestRouter(t *testing.T) {
 	router := &forge.HTTPRouter{
 		Routes: map[string]http.Handler{
 			"/": http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				forge.RespondJSON(w, http.StatusOK, Response{
+				handlerContext := forge.NewHandlerContext(w, r)
+				handlerContext.RespondJSON(http.StatusOK, Response{
 					OK:      true,
 					Message: "Hello there.",
 				})
 			}),
 		},
 		NotFoundHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			forge.RespondJSON(w, http.StatusNotFound, Response{
+			handlerContext := forge.NewHandlerContext(w, r)
+
+			handlerContext.RespondJSON(http.StatusNotFound, Response{
 				OK:      false,
 				Message: "not found",
 			})

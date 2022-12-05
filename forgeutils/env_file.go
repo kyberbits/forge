@@ -1,4 +1,4 @@
-package forge
+package forgeutils
 
 import (
 	"io"
@@ -6,7 +6,7 @@ import (
 	"regexp"
 )
 
-func SetValueInEnvFile(filePath, key string, value string) {
+func EnvironmentSetValueInFile(filePath, key string, value string) {
 	targetLine := key + "=" + value
 
 	originalFileString := ""

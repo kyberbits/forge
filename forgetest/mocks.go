@@ -1,4 +1,4 @@
-package forge
+package forgetest
 
 import (
 	"net/http"

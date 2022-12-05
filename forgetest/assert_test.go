@@ -1,10 +1,10 @@
-package forge_test
+package forgetest_test
 
 import (
 	"errors"
 	"testing"
 
-	"github.com/kyberbits/forge"
+	"github.com/kyberbits/forge/forgetest"
 )
 
 func TestAssert(t *testing.T) {
@@ -12,16 +12,16 @@ func TestAssert(t *testing.T) {
 
 	{ // Equal
 		expected := errors.New("{\n\t\"Expected\": false,\n\t\"Actual\": true\n}")
-		actual := forge.Assert(false, true)
-		if err := forge.Assert(expected, actual); err != nil {
+		actual := forgetest.Assert(false, true)
+		if err := forgetest.Assert(expected, actual); err != nil {
 			t.Error(err)
 		}
 	}
 
 	{ // Not Equal
 		var expected error = nil
-		actual := forge.Assert(true, true)
-		if err := forge.Assert(expected, actual); err != nil {
+		actual := forgetest.Assert(true, true)
+		if err := forgetest.Assert(expected, actual); err != nil {
 			t.Error(err)
 		}
 	}

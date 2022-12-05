@@ -1,14 +1,14 @@
-package forge_test
+package forgetest_test
 
 import (
 	"net/http"
 	"testing"
 
-	"github.com/kyberbits/forge"
+	"github.com/kyberbits/forge/forgetest"
 )
 
 func TestMockRoundTripperQueue(t *testing.T) {
-	q := forge.MockRoundTripperQueue(nil, []forge.MockRoundTripFunc{
+	q := forgetest.MockRoundTripperQueue(nil, []forgetest.MockRoundTripFunc{
 		func(t *testing.T, request *http.Request) (*http.Response, error) {
 			return nil, nil
 		},

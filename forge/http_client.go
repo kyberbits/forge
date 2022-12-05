@@ -8,30 +8,30 @@ import (
 	"net/http"
 )
 
-type HTTPClientInterceptor interface {
-	ModRequest(request *http.Request) error
-	ErrorCheck(response *http.Response) error
-}
-
 func NewHTTPClient(
-	interceptor HTTPClientInterceptor,
 	client *http.Client,
+	modRequest func(request *http.Request) error,
+	errorCheck func(response *http.Response) error,
 ) *HTTPClient {
 	return &HTTPClient{
-		client:      client,
-		interceptor: interceptor,
+		client:     client,
+		modRequest: modRequest,
+		errorCheck: errorCheck,
 	}
 }
 
 type HTTPClient struct {
-	client      *http.Client
-	interceptor HTTPClientInterceptor
+	client     *http.Client
+	modRequest func(request *http.Request) error
+	errorCheck func(response *http.Response) error
 }
 
 func (httpClient *HTTPClient) Do(request *http.Request) (*http.Response, error) {
 	// Run the ModRequest func
-	if err := httpClient.interceptor.ModRequest(request); err != nil {
-		return nil, err
+	if httpClient.modRequest != nil {
+		if err := httpClient.modRequest(request); err != nil {
+			return nil, err
+		}
 	}
 
 	response, err := httpClient.client.Do(request)
@@ -42,12 +42,13 @@ func (httpClient *HTTPClient) Do(request *http.Request) (*http.Response, error) 
 	// Copy the body so we can re-write it to the response
 	bodyBytes, _ := io.ReadAll(response.Body)
 	response.Body.Close()
-
 	response.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	// Run the ErrorCheck func
-	if err := httpClient.interceptor.ErrorCheck(response); err != nil {
-		return nil, err
+	if httpClient.errorCheck != nil {
+		if err := httpClient.errorCheck(response); err != nil {
+			return nil, err
+		}
 	}
 
 	// Replace the body incase the error checker read the body

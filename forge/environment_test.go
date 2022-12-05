@@ -3,7 +3,8 @@ package forge_test
 import (
 	"testing"
 
-	"github.com/kyberbits/forge"
+	"github.com/kyberbits/forge/forge"
+	"github.com/kyberbits/forge/forgetest"
 )
 
 func TestEnvironmentSuccess(t *testing.T) {
@@ -31,7 +32,7 @@ func TestEnvironmentSuccess(t *testing.T) {
 		Debug: true,
 	}
 
-	if err := forge.Assert(expected, actual); err != nil {
+	if err := forgetest.Assert(expected, actual); err != nil {
 		t.Error(err)
 	}
 }

@@ -9,7 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/kyberbits/forge"
+	"github.com/kyberbits/forge/forge"
+	"github.com/kyberbits/forge/forgetest"
 )
 
 func TestLoggerMiddleware(t *testing.T) {
@@ -19,7 +20,7 @@ func TestLoggerMiddleware(t *testing.T) {
 		Logger: forge.NewLogger(
 			"http",
 			buffer,
-			func(logEntry *forge.LogEntry, ctx context.Context, r *http.Request) {
+			func(logEntry *forge.Log, ctx context.Context, r *http.Request) {
 			},
 		),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -36,11 +37,11 @@ func TestLoggerMiddleware(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	httpLogger.ServeHTTP(recorder, request)
 
-	actual := forge.LogEntry{}
+	actual := forge.Log{}
 	bufferBytes, _ := io.ReadAll(buffer)
 	json.Unmarshal(bufferBytes, &actual)
 
-	if err := forge.Assert("HTTP Request", actual.Message); err != nil {
+	if err := forgetest.Assert("HTTP Request", actual.Message); err != nil {
 		t.Fatal(actual)
 	}
 }

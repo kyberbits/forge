@@ -7,18 +7,12 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/kyberbits/forge/forgeutils"
 )
 
-const (
-	LevelCritical = "CRITICAL"
-	LevelError    = "ERROR"
-	LevelWarning  = "WARNING"
-	LevelInfo     = "INFO"
-	LevelDebug    = "DEBUG"
-)
-
-type LogSupplementer func(
-	logEntry *LogEntry,
+type LogSupplementerFunc func(
+	logEntry *Log,
 	ctx context.Context,
 	r *http.Request,
 )
@@ -26,7 +20,7 @@ type LogSupplementer func(
 func NewLogger(
 	channel string,
 	writer io.Writer,
-	supplementer LogSupplementer,
+	supplementer LogSupplementerFunc,
 ) *Logger {
 	return &Logger{
 		channel:      channel,
@@ -38,7 +32,7 @@ func NewLogger(
 type Logger struct {
 	channel      string
 	encoder      *json.Encoder
-	supplementer LogSupplementer
+	supplementer LogSupplementerFunc
 }
 
 func (logger *Logger) Copy(newChannel string) *Logger {
@@ -60,15 +54,15 @@ func (logger *Logger) Log(
 		extras = map[string]any{}
 	}
 
-	r := getContextRequest(ctx)
+	r := forgeutils.ContextGetRequest(ctx)
 
-	entry := LogEntry{
+	entry := Log{
 		Channel:   logger.channel,
 		Timestamp: time.Now(),
 		Level:     level,
 		Message:   message,
 		Extras:    extras,
-		ContextID: GetContextID(ctx),
+		ContextID: forgeutils.ContextGetID(ctx),
 	}
 
 	// Supplement the logger if there is one
@@ -131,7 +125,7 @@ func (logger *Logger) StandardLogger() *log.Logger {
 	return log.New(logger, "", 0)
 }
 
-type LogEntry struct {
+type Log struct {
 	Timestamp time.Time      `json:"@timestamp"`
 	Channel   string         `json:"channel"`
 	Level     string         `json:"level"`

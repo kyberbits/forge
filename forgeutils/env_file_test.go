@@ -1,10 +1,12 @@
-package forge_test
+package forgeutils_test
 
 import (
 	"os"
 	"testing"
 
-	"github.com/kyberbits/forge"
+	"github.com/kyberbits/forge/forge"
+	"github.com/kyberbits/forge/forgetest"
+	"github.com/kyberbits/forge/forgeutils"
 )
 
 func TestSetValueInEnvFile(t *testing.T) {
@@ -14,15 +16,15 @@ func TestSetValueInEnvFile(t *testing.T) {
 	runtime := forge.NewRuntime()
 	runtime.Environment = forge.Environment{} // Clear out the environment
 
-	forge.SetValueInEnvFile(targetFile, "FOO", "FOO")
-	forge.SetValueInEnvFile(targetFile, "FOO", "BAR")
+	forgeutils.EnvironmentSetValueInFile(targetFile, "FOO", "FOO")
+	forgeutils.EnvironmentSetValueInFile(targetFile, "FOO", "BAR")
 
 	// Read in the current status
 	if err := runtime.ReadInEnvironmentFile(targetFile); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := forge.Assert("BAR", runtime.Environment["FOO"]); err != nil {
+	if err := forgetest.Assert("BAR", runtime.Environment["FOO"]); err != nil {
 		t.Fatal(err)
 	}
 

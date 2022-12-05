@@ -3,7 +3,8 @@ package forge_test
 import (
 	"testing"
 
-	"github.com/kyberbits/forge"
+	"github.com/kyberbits/forge/forge"
+	"github.com/kyberbits/forge/forgetest"
 )
 
 func TestCSPFull(t *testing.T) {
@@ -26,7 +27,7 @@ func TestCSPFull(t *testing.T) {
 		},
 	}
 	expected := "default-src 'self' example.com;script-src 'self' example.com;connect-src 'self' example.com;frame-src 'self' example.com;"
-	if err := forge.Assert(expected, csp.String()); err != nil {
+	if err := forgetest.Assert(expected, csp.String()); err != nil {
 		t.Error(err)
 	}
 }
@@ -34,7 +35,7 @@ func TestCSPFull(t *testing.T) {
 func TestCSPBlank(t *testing.T) {
 	csp := forge.CSP{}
 	expected := ""
-	if err := forge.Assert(expected, csp.String()); err != nil {
+	if err := forgetest.Assert(expected, csp.String()); err != nil {
 		t.Error(err)
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kyberbits/forge"
+	"github.com/kyberbits/forge/forge"
 )
 
 func TestStatic(t *testing.T) {
@@ -50,7 +50,8 @@ func TestStaticNotFound(t *testing.T) {
 		Handler: &forge.HTTPStatic{
 			FileSystem: http.FS(os.DirFS("test_files/static")),
 			NotFoundHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				forge.RespondHTML(w, http.StatusNotFound, "This is not the page you are looking for.")
+				handlerContext := forge.NewHandlerContext(w, r)
+				handlerContext.RespondHTML(http.StatusNotFound, "This is not the page you are looking for.")
 			}),
 		},
 		Request:            request,
