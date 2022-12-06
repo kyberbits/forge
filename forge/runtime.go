@@ -77,36 +77,47 @@ func (runtime *Runtime) ReadInEnvironmentFile(fileName string) error {
 }
 
 func (runtime *Runtime) KeepRunning(ctx context.Context, app App, action func(ctx context.Context), coolDown time.Duration) {
-	defer func() {
-		if r := recover(); r != nil {
-			if err, ok := r.(error); ok {
-				app.Logger().Error(ctx, "Panic Err", map[string]any{
-					"err": err,
-				})
-			} else {
-				app.Logger().Error(ctx, "Panic Err", map[string]any{
-					"err": r,
-				})
-			}
+	done := false
+	for {
+		if done {
+			return
+		}
+
+		if err := func() error {
+			defer func() {
+				if r := recover(); r != nil {
+					if err, ok := r.(error); ok {
+						app.Logger().Error(ctx, "Panic Err", map[string]any{
+							"err": err,
+						})
+					} else {
+						app.Logger().Error(ctx, "Panic Err", map[string]any{
+							"err": r,
+						})
+					}
+
+					select {
+					case <-time.After(coolDown):
+						return
+					case <-ctx.Done():
+						done = true
+						return
+					}
+				}
+			}()
+
+			action(ctx)
 
 			select {
 			case <-time.After(coolDown):
-				runtime.KeepRunning(ctx, app, action, coolDown)
+				return nil
 			case <-ctx.Done():
-				return
+				return errors.New("we are all set")
 			}
+		}(); err != nil {
+			return
 		}
-	}()
-
-	action(ctx)
-
-	select {
-	case <-time.After(coolDown):
-		runtime.KeepRunning(ctx, app, action, coolDown)
-	case <-ctx.Done():
-		return
 	}
-
 }
 
 func (runtime *Runtime) Serve(ctx context.Context, app App) error {
