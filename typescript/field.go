@@ -29,7 +29,7 @@ func (f Field) String() string {
 	}
 
 	return fmt.Sprintf(
-		"%s%s %s;",
+		"%s%s %s",
 		name,
 		separator,
 		typeString,

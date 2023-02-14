@@ -30,7 +30,7 @@ func TestGenerate(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want []Interface
+		want Interfaces
 	}{
 		{
 			name: "basic test",
@@ -39,7 +39,7 @@ func TestGenerate(t *testing.T) {
 					TestUser{},
 				},
 			},
-			want: []Interface{
+			want: Interfaces{
 				{
 					Name: "TestUser",
 					Fields: []Field{

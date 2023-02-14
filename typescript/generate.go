@@ -7,8 +7,8 @@ import (
 )
 
 // Generate a list of TypeScript Interfaces
-func Generate(goStructs []interface{}) []Interface {
-	tsInterfaces := []Interface{}
+func Generate(goStructs []interface{}) Interfaces {
+	tsInterfaces := Interfaces{}
 	for _, goStruct := range goStructs {
 		rv := reflect.ValueOf(goStruct)
 

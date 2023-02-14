@@ -14,7 +14,7 @@ func TestField_String(t *testing.T) {
 				Name: "name",
 				Type: "string",
 			},
-			want: "name: string;",
+			want: "name: string",
 		},
 		{
 			name: "optional",
@@ -23,7 +23,7 @@ func TestField_String(t *testing.T) {
 				Optional: true,
 				Type:     "string",
 			},
-			want: "name?: string;",
+			want: "name?: string",
 		},
 		{
 			name: "optional",
@@ -31,7 +31,7 @@ func TestField_String(t *testing.T) {
 				Name: "name",
 				Type: "string[]",
 			},
-			want: "name: string[]|null;",
+			want: "name: string[]|null",
 		},
 		{
 			name: "null",
@@ -40,7 +40,7 @@ func TestField_String(t *testing.T) {
 				Null: true,
 				Type: "string",
 			},
-			want: "name: string|null;",
+			want: "name: string|null",
 		},
 	}
 	for _, tt := range tests {

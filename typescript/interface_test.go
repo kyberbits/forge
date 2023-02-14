@@ -25,7 +25,7 @@ func TestInterface_String(t *testing.T) {
 					},
 				},
 			},
-			want: "export interface User {\n\tid: number;\n}",
+			want: "export interface User {\n\tid: number\n}",
 		},
 		{
 			Interface: Interface{
@@ -41,7 +41,7 @@ func TestInterface_String(t *testing.T) {
 					},
 				},
 			},
-			want: "export interface User {\n\tid: number;\n\tname: string;\n}",
+			want: "export interface User {\n\tid: number\n\tname: string\n}",
 		},
 	}
 	for _, tt := range tests {
