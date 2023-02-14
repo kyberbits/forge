@@ -17,6 +17,11 @@ type LogSupplementerFunc func(
 	r *http.Request,
 )
 
+type LoggerErrorExtrasAdder interface {
+	error
+	AddExtras(map[string]any)
+}
+
 func NewLogger(
 	channel string,
 	writer io.Writer,
@@ -63,6 +68,22 @@ func (logger *Logger) Log(
 		Message:   message,
 		Extras:    extras,
 		ContextID: forgeutils.ContextGetID(ctx),
+	}
+
+	for key, extra := range extras {
+		err, isErr := extra.(error)
+		if !isErr {
+			continue
+		}
+
+		// Convert the error to a string in the "extras"
+		extras[key] = err.Error()
+
+		extrasAdder, isExtrasLogger := err.(LoggerErrorExtrasAdder)
+		if !isExtrasLogger {
+			continue
+		}
+		extrasAdder.AddExtras(extras)
 	}
 
 	// Supplement the logger if there is one
