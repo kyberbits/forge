@@ -23,9 +23,9 @@ func (f Field) String() string {
 
 	typeString := f.Type
 	if strings.HasSuffix(typeString, "[]") {
-		typeString += "|null"
+		typeString += " | null"
 	} else if f.Null {
-		typeString += "|null"
+		typeString += " | null"
 	}
 
 	return fmt.Sprintf(
