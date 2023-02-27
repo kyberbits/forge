@@ -7,6 +7,8 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+
+	"github.com/kyberbits/forge/forgeutils"
 )
 
 type HandlerContext struct {
@@ -54,6 +56,11 @@ func (handlerContext *HandlerContext) DecodeRequest(target any) error {
 
 func (handlerContext *HandlerContext) RespondJSON(status int, v any) {
 	encoder := json.NewEncoder(handlerContext.Writer)
+	if jsonResponse, ok := v.(forgeutils.JsonResponse); ok {
+		jsonResponse.ContextID = forgeutils.ContextGetID(handlerContext.Request.Context())
+		v = jsonResponse
+	}
+
 	handlerContext.Writer.Header().Set("Content-Type", "application/json")
 	handlerContext.Writer.WriteHeader(status)
 	encoder.Encode(v)
