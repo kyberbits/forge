@@ -1,6 +1,8 @@
 package forge
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"io"
 	"mime"
 	"net/http"
@@ -40,6 +42,11 @@ func (httpStatic *HTTPStatic) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		w.Header().Set("Cache-Control", httpStatic.CacheControl)
 	}
 
+	bodyBytes, _ := io.ReadAll(file)
+	h := sha256.New()
+	h.Write(bodyBytes)
+	w.Header().Set("etag", hex.EncodeToString(h.Sum(nil)))
+
 	w.WriteHeader(http.StatusOK)
-	io.Copy(w, file)
+	w.Write(bodyBytes)
 }
