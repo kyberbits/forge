@@ -14,6 +14,7 @@ type TestUser struct {
 	Admin     bool   `json:"admin,omitempty"`
 	Password  string `json:"-"`
 	Roles     []string
+	VoteCount uint64
 	CreatedAt time.Time
 	DeletedAt *time.Time
 	secret    string
@@ -67,6 +68,10 @@ func TestGenerate(t *testing.T) {
 						{
 							Name: "Roles",
 							Type: "string[]",
+						},
+						{
+							Name: "VoteCount",
+							Type: "number",
 						},
 						{
 							Name: "CreatedAt",
