@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/kyberbits/forge/forgeutils"
 )
@@ -14,6 +15,22 @@ import (
 type HandlerContext struct {
 	Writer  http.ResponseWriter
 	Request *http.Request
+}
+
+func (handlerContext *HandlerContext) Deadline() (deadline time.Time, ok bool) {
+	return handlerContext.Request.Context().Deadline()
+}
+
+func (handlerContext *HandlerContext) Done() <-chan struct{} {
+	return handlerContext.Request.Context().Done()
+}
+
+func (handlerContext *HandlerContext) Err() error {
+	return handlerContext.Request.Context().Err()
+}
+
+func (handlerContext *HandlerContext) Value(key any) any {
+	return handlerContext.Request.Context().Value(key)
 }
 
 func NewHandlerContext(w http.ResponseWriter, r *http.Request) *HandlerContext {
@@ -57,7 +74,7 @@ func (handlerContext *HandlerContext) DecodeRequest(target any) error {
 func (handlerContext *HandlerContext) RespondJSON(status int, v any) {
 	encoder := json.NewEncoder(handlerContext.Writer)
 	if jsonResponse, ok := v.(forgeutils.JsonResponse); ok {
-		jsonResponse.ContextID = forgeutils.ContextGetID(handlerContext.Request.Context())
+		jsonResponse.ContextID = forgeutils.ContextGetID(handlerContext)
 		v = jsonResponse
 	}
 
