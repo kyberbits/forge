@@ -80,9 +80,9 @@ func TranslateReflectTypeString(reflectTypeString string) string {
 	switch reflectTypeString {
 	case "interface {}":
 		return "any"
-	case "int":
+	case "int", "int8", "int16", "int32", "int64":
 		return "number"
-	case "uint":
+	case "uint", "uint8", "uint16", "uint32", "uint64":
 		return "number"
 	case "bool":
 		return "boolean"
