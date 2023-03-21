@@ -11,7 +11,7 @@ func TestAssert(t *testing.T) {
 	// LOL, this test is funny!
 
 	{ // Equal
-		expected := errors.New("{\n\t\"Expected\": false,\n\t\"Actual\": true\n}")
+		expected := errors.New("[false != true]")
 		actual := forgetest.Assert(false, true)
 		if err := forgetest.Assert(expected, actual); err != nil {
 			t.Error(err)

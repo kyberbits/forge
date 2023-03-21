@@ -1,9 +1,9 @@
 package forgetest
 
 import (
-	"encoding/json"
 	"fmt"
-	"reflect"
+
+	"github.com/go-test/deep"
 )
 
 type AssertFailure struct {
@@ -20,13 +20,8 @@ func Assert(expected interface{}, actual interface{}) error {
 		expected = expectedErr.Error()
 	}
 
-	if !reflect.DeepEqual(expected, actual) {
-		actualBytes, _ := json.MarshalIndent(AssertFailure{
-			Expected: expected,
-			Actual:   actual,
-		}, "", "\t")
-
-		return fmt.Errorf("%s", string(actualBytes))
+	if diff := deep.Equal(expected, actual); diff != nil {
+		return fmt.Errorf("%v", diff)
 	}
 
 	return nil
