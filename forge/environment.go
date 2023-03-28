@@ -20,8 +20,9 @@ func NewEnvironment() Environment {
 
 type Environment map[string]string
 
-func (env Environment) Decode(target interface{}) error {
+func (environment Environment) Decode(target interface{}) error {
 	valueOf := reflect.ValueOf(target)
+
 	element := valueOf.Elem()
 	for i := 0; i < element.NumField(); i++ {
 		fieldInstance := element.Field(i)
@@ -34,7 +35,7 @@ func (env Environment) Decode(target interface{}) error {
 		}
 
 		// Get the matching environment variable
-		valueFromEnv, ok := env[tag]
+		valueFromEnv, ok := environment[tag]
 		if !ok {
 			continue
 		}
@@ -47,6 +48,7 @@ func (env Environment) Decode(target interface{}) error {
 			if err != nil {
 				return err
 			}
+
 			fieldInstance.SetBool(convertedValue)
 
 		case reflect.Int:
@@ -54,6 +56,7 @@ func (env Environment) Decode(target interface{}) error {
 			if err != nil {
 				return err
 			}
+
 			fieldInstance.SetInt(int64(convertedValue))
 		}
 	}

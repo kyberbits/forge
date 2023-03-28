@@ -24,9 +24,11 @@ func parseJSONFieldTag(tagString string) jsonFieldTag {
 	}
 
 	tag := jsonFieldTag{}
+
 	for i, part := range parts {
 		if i == 0 {
 			tag.NameOverride = part
+
 			continue
 		}
 

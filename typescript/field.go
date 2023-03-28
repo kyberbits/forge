@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-// Field represents a TypeScript Interface field
 type Field struct {
 	Name     string
 	Type     string

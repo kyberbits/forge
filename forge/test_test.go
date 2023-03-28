@@ -22,12 +22,13 @@ func testHandler(t *testing.T, testCase HandlerTestCase) {
 
 	if actualStatusCode != testCase.ExpectedStatusCode {
 		t.Errorf("Got %d, Expected: %d", actualStatusCode, testCase.ExpectedStatusCode)
+
 		return
 	}
 
 	if actualBody != testCase.ExpectedBody {
 		t.Errorf("Got %s, Expected: %s", actualBody, testCase.ExpectedBody)
+
 		return
 	}
-
 }

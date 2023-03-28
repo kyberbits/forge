@@ -28,6 +28,7 @@ func TestGenerate(t *testing.T) {
 	type args struct {
 		goStructs []interface{}
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -91,6 +92,7 @@ func TestGenerate(t *testing.T) {
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := Generate(tt.args.goStructs); !reflect.DeepEqual(got, tt.want) {

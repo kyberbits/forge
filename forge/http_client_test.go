@@ -17,6 +17,7 @@ func TestHTTPClientSuccess(t *testing.T) {
 			Transport: forgetest.MockRoundTripperQueue(t, []forgetest.MockRoundTripFunc{
 				func(t *testing.T, request *http.Request) (*http.Response, error) {
 					file, _ := os.Open("test_files/client/test.json")
+
 					return &http.Response{
 						Request:    request,
 						StatusCode: http.StatusOK,
@@ -42,6 +43,7 @@ func TestHTTPClientSuccess(t *testing.T) {
 		Greeting: "Hello there.",
 	}
 	actual := target
+
 	if err := forgetest.Assert(expected, actual); err != nil {
 		t.Fatal(err)
 	}

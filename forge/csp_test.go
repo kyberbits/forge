@@ -26,6 +26,7 @@ func TestCSPFull(t *testing.T) {
 			"example.com",
 		},
 	}
+
 	expected := "default-src 'self' example.com;script-src 'self' example.com;connect-src 'self' example.com;frame-src 'self' example.com;"
 	if err := forgetest.Assert(expected, csp.String()); err != nil {
 		t.Error(err)
@@ -35,6 +36,7 @@ func TestCSPFull(t *testing.T) {
 func TestCSPBlank(t *testing.T) {
 	csp := forge.CSP{}
 	expected := ""
+
 	if err := forgetest.Assert(expected, csp.String()); err != nil {
 		t.Error(err)
 	}

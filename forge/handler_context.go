@@ -12,12 +12,14 @@ import (
 	"github.com/kyberbits/forge/forgeutils"
 )
 
+var ErrBodyCanNotBeBlank = errors.New("Request Body Can Not Be Blank")
+
 type HandlerContext struct {
 	Writer  http.ResponseWriter
 	Request *http.Request
 }
 
-func (handlerContext *HandlerContext) Deadline() (deadline time.Time, ok bool) {
+func (handlerContext *HandlerContext) Deadline() (time.Time, bool) {
 	return handlerContext.Request.Context().Deadline()
 }
 
@@ -50,11 +52,12 @@ func (handlerContext *HandlerContext) ReadBody() []byte {
 
 func (handlerContext *HandlerContext) DecodeRequest(target any) error {
 	body := handlerContext.ReadBody()
-	err := json.Unmarshal(body, target)
-	if err != nil {
+
+	if err := json.Unmarshal(body, target); err != nil {
 		if err.Error() == "EOF" {
-			return errors.New("Request Body Can Not Be Blank")
+			return ErrBodyCanNotBeBlank
 		}
+
 		return err
 	}
 
@@ -73,31 +76,37 @@ func (handlerContext *HandlerContext) DecodeRequest(target any) error {
 
 func (handlerContext *HandlerContext) RespondJSON(status int, v any) {
 	encoder := json.NewEncoder(handlerContext.Writer)
-	if jsonResponse, ok := v.(forgeutils.JsonResponse); ok {
+
+	if jsonResponse, ok := v.(forgeutils.JSONResponse); ok {
 		jsonResponse.ContextID = forgeutils.ContextGetID(handlerContext)
 		v = jsonResponse
 	}
 
 	handlerContext.Writer.Header().Set("Content-Type", "application/json")
 	handlerContext.Writer.WriteHeader(status)
-	encoder.Encode(v)
+
+	if err := encoder.Encode(v); err != nil {
+		panic(err)
+	}
 }
 
 func (handlerContext *HandlerContext) RespondHTML(status int, s string) {
 	handlerContext.Writer.WriteHeader(status)
-	handlerContext.Writer.Write([]byte(s))
+	_, _ = handlerContext.Writer.Write([]byte(s))
 }
 
 func (handlerContext *HandlerContext) ExecuteTemplate(tmpl *template.Template, data any) {
 	bodyBuffer := bytes.NewBuffer([]byte{})
 	if err := tmpl.Execute(bodyBuffer, data); err != nil {
 		http.Error(handlerContext.Writer, err.Error(), http.StatusInternalServerError)
+
 		return
 	}
 
 	responseBytes, err := io.ReadAll(bodyBuffer)
 	if err != nil {
 		http.Error(handlerContext.Writer, err.Error(), http.StatusInternalServerError)
+
 		return
 	}
 

@@ -66,8 +66,13 @@ func (httpClient *HTTPClient) Request(
 ) error {
 	// Build the body, if there is one
 	var body io.Reader
+
 	if payload != nil {
-		payloadBytes, _ := json.Marshal(payload)
+		payloadBytes, err := json.Marshal(payload)
+		if err != nil {
+			return err
+		}
+
 		body = bytes.NewReader(payloadBytes)
 	}
 
@@ -84,6 +89,7 @@ func (httpClient *HTTPClient) Request(
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
 
 	// Decode the response body onto the target, if there is one
 	decoder := json.NewDecoder(response.Body)

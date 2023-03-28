@@ -54,6 +54,7 @@ func (resources *Resources) MustOpenFile(fileName string) fs.File {
 
 func (resources *Resources) MustOpenFileContents(fileName string) string {
 	file := resources.MustOpenFile(fileName)
+
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
 		panic(err)
@@ -64,6 +65,7 @@ func (resources *Resources) MustOpenFileContents(fileName string) string {
 
 func (resources *Resources) MustParseHTMLTemplate(fileName string) *template.Template {
 	file := resources.MustOpenFile(fileName)
+
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
 		panic(err)

@@ -83,6 +83,7 @@ func (logger *Logger) Log(
 		if !isExtrasLogger {
 			continue
 		}
+
 		extrasAdder.AddExtras(extras)
 	}
 
@@ -91,7 +92,9 @@ func (logger *Logger) Log(
 		logger.supplementer(&entry, ctx, r)
 	}
 
-	logger.encoder.Encode(entry)
+	if err := logger.encoder.Encode(entry); err != nil {
+		panic(err)
+	}
 }
 
 func (logger *Logger) Critical(

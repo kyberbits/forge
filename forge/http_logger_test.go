@@ -14,6 +14,7 @@ import (
 )
 
 func TestLoggerMiddleware(t *testing.T) {
+	ctx := context.Background()
 	buffer := bytes.NewBuffer([]byte{})
 
 	httpLogger := &forge.HTTPLogger{
@@ -25,11 +26,11 @@ func TestLoggerMiddleware(t *testing.T) {
 		),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusCreated)
-			w.Write([]byte("Logger test."))
+			_, _ = w.Write([]byte("Logger test."))
 		}),
 	}
 
-	request, err := http.NewRequest(http.MethodGet, "/foobar", nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, "/foobar", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +40,10 @@ func TestLoggerMiddleware(t *testing.T) {
 
 	actual := forge.Log{}
 	bufferBytes, _ := io.ReadAll(buffer)
-	json.Unmarshal(bufferBytes, &actual)
+
+	if err := json.Unmarshal(bufferBytes, &actual); err != nil {
+		t.Fatal(err)
+	}
 
 	if err := forgetest.Assert("HTTP Request", actual.Message); err != nil {
 		t.Fatal(actual)

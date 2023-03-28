@@ -17,6 +17,7 @@ type MockRoundTripFunc func(t *testing.T, request *http.Request) (*http.Response
 
 func MockRoundTripperQueue(t *testing.T, queue []MockRoundTripFunc) http.RoundTripper {
 	runNumber := 0
+
 	return MockableRoundTripper{
 		RoundTripFunc: func(r *http.Request) (*http.Response, error) {
 			defer func() {

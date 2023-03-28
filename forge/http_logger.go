@@ -20,7 +20,9 @@ func (httpLogger *HTTPLogger) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	r = forgeutils.ContextAddToRequest(r)
 
 	startTime := time.Now()
+
 	httpLogger.Handler.ServeHTTP(recorder, r)
+
 	duration := time.Since(startTime)
 
 	// Log the completed request
@@ -54,5 +56,6 @@ func getRemoteAddr(r *http.Request) string {
 	if r.Header.Get("X-Forwarded-For") != "" {
 		return r.Header.Get("X-Forwarded-For")
 	}
+
 	return r.RemoteAddr
 }

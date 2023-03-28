@@ -27,5 +27,4 @@ func TestSetValueInEnvFile(t *testing.T) {
 	if err := forgetest.Assert("BAR", runtime.Environment["FOO"]); err != nil {
 		t.Fatal(err)
 	}
-
 }
