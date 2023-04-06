@@ -8,7 +8,7 @@ import (
 	"github.com/kyberbits/forge/forge"
 )
 
-func TestResources(t *testing.T) {
+func TestResources(_ *testing.T) {
 	resources := forge.NewResources([]fs.FS{
 		os.DirFS("./test_files/resources"),
 	})

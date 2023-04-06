@@ -33,7 +33,6 @@ func (i Interfaces) CreateFile(targetFile string) error {
 	return nil
 }
 
-// Interface represents a TypeScript Interface
 type Interface struct {
 	Name   string
 	Fields []Field

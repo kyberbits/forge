@@ -10,12 +10,17 @@ import (
 func TestMockRoundTripperQueue(t *testing.T) {
 	q := forgetest.MockRoundTripperQueue(nil, []forgetest.MockRoundTripFunc{
 		func(t *testing.T, request *http.Request) (*http.Response, error) {
-			return nil, nil
+			response := &http.Response{
+				Body: http.NoBody,
+			}
+
+			return response, nil
 		},
 	})
 
 	// Request 1
-	q.RoundTrip(nil)
+	response1, _ := q.RoundTrip(nil)
+	defer response1.Body.Close()
 
 	defer func() {
 		if r := recover(); r == nil {
@@ -24,5 +29,6 @@ func TestMockRoundTripperQueue(t *testing.T) {
 	}()
 
 	// Request 2 (should panic)
-	q.RoundTrip(nil)
+	response2, _ := q.RoundTrip(nil)
+	defer response2.Body.Close()
 }

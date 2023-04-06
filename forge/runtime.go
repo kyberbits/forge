@@ -97,6 +97,7 @@ func (runtime *Runtime) KeepRunning(ctx context.Context, app App, action func(ct
 	}
 
 	tickFunc()
+
 	for range ticker.C {
 		tickFunc()
 	}
@@ -123,6 +124,7 @@ func (runtime *Runtime) Serve(ctx context.Context, app App) error {
 			"addr": app.ListenAddress(),
 			"err":  err,
 		})
+
 		return err
 	}
 

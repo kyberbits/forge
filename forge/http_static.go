@@ -23,6 +23,7 @@ func (httpStatic *HTTPStatic) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	}
 
 	requestedFileName := r.URL.Path
+
 	isRequestingDirectory := strings.HasSuffix(requestedFileName, "/")
 	if isRequestingDirectory {
 		requestedFileName += httpStatic.Index
@@ -31,6 +32,7 @@ func (httpStatic *HTTPStatic) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	file, err := httpStatic.FileSystem.Open(requestedFileName)
 	if err != nil {
 		correctNotFoundHandler(httpStatic.NotFoundHandler).ServeHTTP(w, r)
+
 		return
 	}
 	defer file.Close()
@@ -38,6 +40,7 @@ func (httpStatic *HTTPStatic) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	fileTypeHeader := mime.TypeByExtension(filepath.Ext(requestedFileName))
 
 	w.Header().Set("Content-Type", fileTypeHeader)
+
 	if httpStatic.CacheControl != "" {
 		w.Header().Set("Cache-Control", httpStatic.CacheControl)
 	}
@@ -48,5 +51,5 @@ func (httpStatic *HTTPStatic) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("etag", hex.EncodeToString(h.Sum(nil)))
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(bodyBytes)
+	_, _ = w.Write(bodyBytes)
 }

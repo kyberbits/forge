@@ -9,16 +9,20 @@ import (
 
 type contextKeyType string
 
-const contextIDKey contextKeyType = "forge-context-id"
-const contextHTTPRequestKey contextKeyType = "forge-request"
+const (
+	contextIDKey          contextKeyType = "forge-context-id"
+	contextHTTPRequestKey contextKeyType = "forge-request"
+)
 
 func ContextAddID(ctx context.Context) context.Context {
 	ctx = context.WithValue(ctx, contextIDKey, uuid.New().String())
+
 	return ctx
 }
 
 func ContextGetID(ctx context.Context) string {
 	rawValue := ctx.Value(contextIDKey)
+
 	contextID, ok := rawValue.(string)
 	if !ok {
 		return ""
@@ -29,6 +33,7 @@ func ContextGetID(ctx context.Context) string {
 
 func ContextGetRequest(ctx context.Context) *http.Request {
 	rawValue := ctx.Value(contextHTTPRequestKey)
+
 	httpRequest, ok := rawValue.(*http.Request)
 	if !ok {
 		return nil
@@ -41,5 +46,6 @@ func ContextAddToRequest(r *http.Request) *http.Request {
 	ctx := r.Context()
 	ctx = ContextAddID(ctx)
 	ctx = context.WithValue(ctx, contextHTTPRequestKey, r) // TODO: this seems wrong
+
 	return r.WithContext(ctx)
 }

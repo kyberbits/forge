@@ -6,15 +6,16 @@ import (
 	"strings"
 )
 
-// Generate a list of TypeScript Interfaces
 func Generate(goStructs []interface{}) Interfaces {
 	tsInterfaces := Interfaces{}
+
 	for _, goStruct := range goStructs {
 		rv := reflect.ValueOf(goStruct)
 
 		tsInterface := Interface{
 			Name: rv.Type().Name(),
 		}
+
 		for i := 0; i < rv.NumField(); i++ {
 			valueField := rv.Field(i)
 			if !valueField.CanInterface() {
@@ -23,13 +24,14 @@ func Generate(goStructs []interface{}) Interfaces {
 
 			typeField := rv.Type().Field(i)
 			tag := parseJSONFieldTag(typeField.Tag.Get("json"))
+
 			if tag.Ignored {
 				continue
 			}
 
 			tsInterface.Fields = append(
 				tsInterface.Fields,
-				genTsField(
+				genTSField(
 					typeField.Name,
 					typeField.Type.String(),
 					tag,
@@ -43,15 +45,16 @@ func Generate(goStructs []interface{}) Interfaces {
 	return tsInterfaces
 }
 
-func genTsField(goFieldName string, goFieldType string, tag jsonFieldTag) Field {
+func genTSField(goFieldName string, goFieldType string, tag jsonFieldTag) Field {
 	tsField := Field{}
 	if strings.HasPrefix(goFieldType, "*") {
 		tsField.Null = true
 		goFieldType = strings.TrimPrefix(goFieldType, "*")
 	}
 
-	tsField.Name = getTsFieldName(goFieldName, tag)
-	tsField.Type = getTsFieldType(goFieldType, tag)
+	tsField.Name = getTSFieldName(goFieldName, tag)
+	tsField.Type = getTSFieldType(goFieldType, tag)
+
 	if tag.Omitempty {
 		tsField.Optional = true
 	}
@@ -59,7 +62,7 @@ func genTsField(goFieldName string, goFieldType string, tag jsonFieldTag) Field 
 	return tsField
 }
 
-func getTsFieldName(goFieldName string, tag jsonFieldTag) string {
+func getTSFieldName(goFieldName string, tag jsonFieldTag) string {
 	if tag.NameOverride != "" {
 		return tag.NameOverride
 	}
@@ -67,7 +70,7 @@ func getTsFieldName(goFieldName string, tag jsonFieldTag) string {
 	return goFieldName
 }
 
-func getTsFieldType(goFieldType string, tag jsonFieldTag) string {
+func getTSFieldType(goFieldType string, tag jsonFieldTag) string {
 	if tag.TypeOverride != "" {
 		goFieldType = tag.TypeOverride
 	}
@@ -75,7 +78,6 @@ func getTsFieldType(goFieldType string, tag jsonFieldTag) string {
 	return TranslateReflectTypeString(goFieldType)
 }
 
-// TranslateReflectTypeString does what is says it does
 func TranslateReflectTypeString(reflectTypeString string) string {
 	switch reflectTypeString {
 	case "interface {}":
