@@ -14,7 +14,7 @@ import (
 type HTTPStatic struct {
 	FileSystem      http.FileSystem
 	SPAMode         bool
-	NotFoundHandler http.Handler
+	NotFoundHandler func(w http.ResponseWriter, r *http.Request, httpStatic *HTTPStatic)
 	Hook            func(w http.ResponseWriter, r *http.Request, fileInfo fs.FileInfo)
 	Index           string
 }
@@ -59,10 +59,10 @@ func (httpStatic *HTTPStatic) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	httpStatic.serveFile(w, r, file, fileInfo)
+	httpStatic.ServeFile(w, r, file, fileInfo)
 }
 
-func (httpStatic *HTTPStatic) serveFile(w http.ResponseWriter, r *http.Request, file http.File, fileInfo fs.FileInfo) {
+func (httpStatic *HTTPStatic) ServeFile(w http.ResponseWriter, r *http.Request, file http.File, fileInfo fs.FileInfo) {
 	if httpStatic.Hook != nil {
 		httpStatic.Hook(w, r, fileInfo)
 	} else {
@@ -102,7 +102,7 @@ func (httpStatic *HTTPStatic) notFound(w http.ResponseWriter, r *http.Request) {
 			defer file.Close()
 			fileInfo, _ := file.Stat()
 
-			httpStatic.serveFile(w, r, file, fileInfo)
+			httpStatic.ServeFile(w, r, file, fileInfo)
 
 			return
 		}
@@ -115,5 +115,5 @@ func (httpStatic *HTTPStatic) notFound(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpStatic.NotFoundHandler.ServeHTTP(w, r)
+	httpStatic.NotFoundHandler(w, r, httpStatic)
 }
