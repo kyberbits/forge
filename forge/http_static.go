@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
+	"io/fs"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -12,16 +13,27 @@ import (
 
 type HTTPStatic struct {
 	FileSystem      http.FileSystem
+	SPAMode         bool
 	NotFoundHandler http.Handler
-	CacheControl    string
+	Hook            func(w http.ResponseWriter, r *http.Request, fileInfo fs.FileInfo)
 	Index           string
 }
 
-func (httpStatic *HTTPStatic) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if httpStatic.Index == "" {
-		httpStatic.Index = "index.html"
-	}
+func HTTPStaticDefaultHook(w http.ResponseWriter, _ *http.Request, fileInfo fs.FileInfo) {
+	fileExtension := filepath.Ext(fileInfo.Name())
+	fileTypeHeader := mime.TypeByExtension(fileExtension)
 
+	w.Header().Set("Content-Type", fileTypeHeader)
+
+	switch fileExtension {
+	case ".html":
+		w.Header().Set("Cache-Control", "no-cache, no-store")
+	default:
+		w.Header().Set("Cache-Control", "max-age=0, must-revalidate")
+	}
+}
+
+func (httpStatic *HTTPStatic) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	requestedFileName := r.URL.Path
 
 	isRequestingDirectory := strings.HasSuffix(requestedFileName, "/")
@@ -31,25 +43,77 @@ func (httpStatic *HTTPStatic) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	file, err := httpStatic.FileSystem.Open(requestedFileName)
 	if err != nil {
-		correctNotFoundHandler(httpStatic.NotFoundHandler).ServeHTTP(w, r)
+		httpStatic.notFound(w, r)
 
 		return
 	}
 	defer file.Close()
+	fileInfo, _ := file.Stat()
 
-	fileTypeHeader := mime.TypeByExtension(filepath.Ext(requestedFileName))
+	// Redirect to add forward slash
+	if fileInfo.IsDir() {
+		if !strings.HasSuffix(r.URL.Path, "/") {
+			http.Redirect(w, r, r.URL.Path+"/", http.StatusTemporaryRedirect)
 
-	w.Header().Set("Content-Type", fileTypeHeader)
+			return
+		}
+	}
 
-	if httpStatic.CacheControl != "" {
-		w.Header().Set("Cache-Control", httpStatic.CacheControl)
+	httpStatic.serveFile(w, r, file, fileInfo)
+}
+
+func (httpStatic *HTTPStatic) serveFile(w http.ResponseWriter, r *http.Request, file http.File, fileInfo fs.FileInfo) {
+	if httpStatic.Hook != nil {
+		httpStatic.Hook(w, r, fileInfo)
+	} else {
+		HTTPStaticDefaultHook(w, r, fileInfo)
 	}
 
 	bodyBytes, _ := io.ReadAll(file)
-	h := sha256.New()
-	h.Write(bodyBytes)
-	w.Header().Set("etag", hex.EncodeToString(h.Sum(nil)))
+
+	// ETAG Handling
+	{
+		h := sha256.New()
+		h.Write(bodyBytes)
+		w.Header().Set("etag", hex.EncodeToString(h.Sum(nil)))
+
+		if r.Header.Get("if-none-match") == w.Header().Get("etag") {
+			w.WriteHeader(http.StatusNotModified)
+
+			return
+		}
+	}
 
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(bodyBytes)
+}
+
+func (httpStatic *HTTPStatic) notFound(w http.ResponseWriter, r *http.Request) {
+	if httpStatic.SPAMode {
+		accept := r.Header.Get("Accept")
+		if strings.HasPrefix(accept, "text/html") {
+			file, err := httpStatic.FileSystem.Open(httpStatic.Index)
+			if err != nil {
+				// Use default not found handler
+				http.NotFoundHandler().ServeHTTP(w, r)
+
+				return
+			}
+			defer file.Close()
+			fileInfo, _ := file.Stat()
+
+			httpStatic.serveFile(w, r, file, fileInfo)
+
+			return
+		}
+	}
+
+	if httpStatic.NotFoundHandler == nil {
+		// Use default not found handler
+		http.NotFoundHandler().ServeHTTP(w, r)
+
+		return
+	}
+
+	httpStatic.NotFoundHandler.ServeHTTP(w, r)
 }
