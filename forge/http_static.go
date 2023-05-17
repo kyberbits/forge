@@ -12,11 +12,12 @@ import (
 )
 
 type HTTPStatic struct {
-	FileSystem   http.FileSystem
-	IndexFile    string
-	NotFoundFile string
-	NotFoundCode int
-	Hook         func(w http.ResponseWriter, r *http.Request, fileInfo fs.FileInfo)
+	FileSystem      http.FileSystem
+	IndexFile       string
+	NotFoundFile    string
+	NotFoundCode    int
+	NotFoundHandler func(w http.ResponseWriter, r *http.Request, httpStatic *HTTPStatic)
+	Hook            func(w http.ResponseWriter, r *http.Request, fileInfo fs.FileInfo)
 }
 
 func HTTPStaticDefaultHook(w http.ResponseWriter, _ *http.Request, fileInfo fs.FileInfo) {
@@ -71,10 +72,10 @@ func (httpStatic *HTTPStatic) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	httpStatic.ServeFile(w, r, file, fileInfo)
+	httpStatic.ServeFile(w, r, file, fileInfo, http.StatusOK)
 }
 
-func (httpStatic *HTTPStatic) ServeFile(w http.ResponseWriter, r *http.Request, file http.File, fileInfo fs.FileInfo) {
+func (httpStatic *HTTPStatic) ServeFile(w http.ResponseWriter, r *http.Request, file http.File, fileInfo fs.FileInfo, statusCode int) {
 	if httpStatic.Hook != nil {
 		httpStatic.Hook(w, r, fileInfo)
 	} else {
@@ -96,11 +97,17 @@ func (httpStatic *HTTPStatic) ServeFile(w http.ResponseWriter, r *http.Request, 
 		}
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(statusCode)
 	_, _ = w.Write(bodyBytes)
 }
 
 func (httpStatic *HTTPStatic) notFound(w http.ResponseWriter, r *http.Request) {
+	if httpStatic.NotFoundHandler != nil {
+		httpStatic.NotFoundHandler(w, r, httpStatic)
+
+		return
+	}
+
 	if strings.HasPrefix(r.Header.Get("Accept"), "text/html") {
 		file, err := httpStatic.FileSystem.Open(httpStatic.NotFoundFile)
 		if err != nil {
@@ -112,7 +119,7 @@ func (httpStatic *HTTPStatic) notFound(w http.ResponseWriter, r *http.Request) {
 		defer file.Close()
 		fileInfo, _ := file.Stat()
 
-		httpStatic.ServeFile(w, r, file, fileInfo)
+		httpStatic.ServeFile(w, r, file, fileInfo, httpStatic.NotFoundCode)
 
 		return
 	}
