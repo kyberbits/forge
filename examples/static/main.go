@@ -12,8 +12,6 @@ func main() {
 
 	static := &forge.HTTPStatic{
 		FileSystem: fileSystem,
-		SPAMode:    true,
-		Index:      "index.html",
 	}
 
 	server := http.Server{

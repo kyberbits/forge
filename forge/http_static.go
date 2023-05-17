@@ -12,11 +12,11 @@ import (
 )
 
 type HTTPStatic struct {
-	FileSystem      http.FileSystem
-	SPAMode         bool
-	NotFoundHandler func(w http.ResponseWriter, r *http.Request, httpStatic *HTTPStatic)
-	Hook            func(w http.ResponseWriter, r *http.Request, fileInfo fs.FileInfo)
-	Index           string
+	FileSystem   http.FileSystem
+	IndexFile    string
+	NotFoundFile string
+	NotFoundCode int
+	Hook         func(w http.ResponseWriter, r *http.Request, fileInfo fs.FileInfo)
 }
 
 func HTTPStaticDefaultHook(w http.ResponseWriter, _ *http.Request, fileInfo fs.FileInfo) {
@@ -34,11 +34,23 @@ func HTTPStaticDefaultHook(w http.ResponseWriter, _ *http.Request, fileInfo fs.F
 }
 
 func (httpStatic *HTTPStatic) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if httpStatic.IndexFile == "" {
+		httpStatic.IndexFile = "index.html"
+	}
+
+	if httpStatic.NotFoundCode == 0 {
+		httpStatic.NotFoundCode = http.StatusNotFound
+	}
+
+	if httpStatic.NotFoundFile == "" {
+		httpStatic.NotFoundFile = "404.html"
+	}
+
 	requestedFileName := r.URL.Path
 
 	isRequestingDirectory := strings.HasSuffix(requestedFileName, "/")
 	if isRequestingDirectory {
-		requestedFileName += httpStatic.Index
+		requestedFileName += httpStatic.IndexFile
 	}
 
 	file, err := httpStatic.FileSystem.Open(requestedFileName)
@@ -89,31 +101,21 @@ func (httpStatic *HTTPStatic) ServeFile(w http.ResponseWriter, r *http.Request, 
 }
 
 func (httpStatic *HTTPStatic) notFound(w http.ResponseWriter, r *http.Request) {
-	if httpStatic.SPAMode {
-		accept := r.Header.Get("Accept")
-		if strings.HasPrefix(accept, "text/html") {
-			file, err := httpStatic.FileSystem.Open(httpStatic.Index)
-			if err != nil {
-				// Use default not found handler
-				http.NotFoundHandler().ServeHTTP(w, r)
-
-				return
-			}
-			defer file.Close()
-			fileInfo, _ := file.Stat()
-
-			httpStatic.ServeFile(w, r, file, fileInfo)
+	if strings.HasPrefix(r.Header.Get("Accept"), "text/html") {
+		file, err := httpStatic.FileSystem.Open(httpStatic.NotFoundFile)
+		if err != nil {
+			// Use default not found handler
+			http.NotFoundHandler().ServeHTTP(w, r)
 
 			return
 		}
-	}
+		defer file.Close()
+		fileInfo, _ := file.Stat()
 
-	if httpStatic.NotFoundHandler == nil {
-		// Use default not found handler
-		http.NotFoundHandler().ServeHTTP(w, r)
+		httpStatic.ServeFile(w, r, file, fileInfo)
 
 		return
 	}
 
-	httpStatic.NotFoundHandler(w, r, httpStatic)
+	http.NotFoundHandler().ServeHTTP(w, r)
 }

@@ -33,7 +33,6 @@ func TestStaticIndex(t *testing.T) {
 	testHandler(t, HandlerTestCase{
 		Handler: &forge.HTTPStatic{
 			FileSystem: http.FS(os.DirFS("test_files/static")),
-			Index:      "index.html",
 		},
 		Request:            request,
 		ExpectedStatusCode: http.StatusOK,
@@ -50,14 +49,10 @@ func TestStaticNotFound(t *testing.T) {
 	testHandler(t, HandlerTestCase{
 		Handler: &forge.HTTPStatic{
 			FileSystem: http.FS(os.DirFS("test_files/static")),
-			NotFoundHandler: func(w http.ResponseWriter, r *http.Request, httpStatic *forge.HTTPStatic) {
-				handlerContext := forge.NewHandlerContext(w, r)
-				handlerContext.RespondHTML(http.StatusNotFound, "This is not the page you are looking for.")
-			},
 		},
 		Request:            request,
 		ExpectedStatusCode: http.StatusNotFound,
-		ExpectedBody:       "This is not the page you are looking for.",
+		ExpectedBody:       "404 page not found\n",
 	})
 }
 
