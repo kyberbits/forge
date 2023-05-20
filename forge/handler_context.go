@@ -12,7 +12,7 @@ import (
 	"github.com/kyberbits/forge/forgeutils"
 )
 
-var ErrBodyCanNotBeBlank = errors.New("Request Body Can Not Be Blank")
+var ErrBodyCanNotBeBlank = errors.New("request body can not be blank")
 
 type HandlerContext struct {
 	Writer  http.ResponseWriter

@@ -4,67 +4,99 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 )
 
+func ReadAllButRetain(reader io.ReadCloser) []byte {
+	bodyBytes, _ := io.ReadAll(reader)
+	reader.Close()
+
+	// Put the bytes back
+	// reader = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	return bodyBytes
+}
+
+type HTTPClientMiddleware interface {
+	ModifyRequest(r *http.Request) error
+	CheckResponse(r *http.Response) error
+}
+
+type HTTPClientResponseMiddleware interface {
+	ModifyResponse(r *http.Response) error
+}
+
 func NewHTTPClient(
-	client *http.Client,
-	modRequest func(request *http.Request) error,
-	errorCheck func(response *http.Response) error,
+	httpClient *http.Client,
+	middleware []HTTPClientMiddleware,
 ) *HTTPClient {
 	return &HTTPClient{
-		client:     client,
-		modRequest: modRequest,
-		errorCheck: errorCheck,
+		httpClient: httpClient,
+		middleware: middleware,
 	}
 }
 
 type HTTPClient struct {
-	client     *http.Client
-	modRequest func(request *http.Request) error
-	errorCheck func(response *http.Response) error
+	httpClient *http.Client
+	middleware []HTTPClientMiddleware
 }
 
-func (httpClient *HTTPClient) Do(request *http.Request) (*http.Response, error) {
-	// Run the ModRequest func
-	if httpClient.modRequest != nil {
-		if err := httpClient.modRequest(request); err != nil {
-			return nil, err
+var ErrHTTPClientShouldRetry = errors.New("")
+
+func (c *HTTPClient) Do(request *http.Request) (*http.Response, error) {
+	const maxAttemptCount = 2
+
+	attemptCount := 0
+
+	var response *http.Response
+
+	var responseErr error
+
+	for attemptCount < maxAttemptCount {
+		attemptCount++
+
+		shouldRetry := false
+
+		for _, middleware := range c.middleware {
+			if err := middleware.ModifyRequest(request); err != nil {
+				return nil, err
+			}
+		}
+
+		response, responseErr = c.httpClient.Do(request)
+		if responseErr != nil {
+			return nil, responseErr
+		}
+
+		for _, middleware := range c.middleware {
+			if err := middleware.CheckResponse(response); err != nil {
+				if errors.Is(err, ErrHTTPClientShouldRetry) {
+					shouldRetry = true
+
+					break
+				}
+
+				return nil, err
+			}
+		}
+
+		if !shouldRetry {
+			break
 		}
 	}
-
-	response, err := httpClient.client.Do(request)
-	if err != nil {
-		return nil, err
-	}
-
-	// Copy the body so we can re-write it to the response
-	bodyBytes, _ := io.ReadAll(response.Body)
-	response.Body.Close()
-	response.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-
-	// Run the ErrorCheck func
-	if httpClient.errorCheck != nil {
-		if err := httpClient.errorCheck(response); err != nil {
-			return nil, err
-		}
-	}
-
-	// Replace the body incase the error checker read the body
-	response.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	return response, nil
 }
 
-func (httpClient *HTTPClient) Request(
+func (c *HTTPClient) JSONRequest(
 	ctx context.Context,
 	method string,
 	url string,
-	payload interface{},
-	target interface{},
+	payload any,
+	target any,
 ) error {
-	// Build the body, if there is one
 	var body io.Reader
 
 	if payload != nil {
@@ -76,22 +108,17 @@ func (httpClient *HTTPClient) Request(
 		body = bytes.NewReader(payloadBytes)
 	}
 
-	// Build the http.Request
-	request, err := http.NewRequest(method, url, body)
+	request, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return err
 	}
 
-	request = request.WithContext(ctx)
-
-	// Execute the http.Request
-	response, err := httpClient.Do(request)
+	response, err := c.Do(request)
 	if err != nil {
 		return err
 	}
 	defer response.Body.Close()
 
-	// Decode the response body onto the target, if there is one
 	decoder := json.NewDecoder(response.Body)
 	if target != nil {
 		if err := decoder.Decode(target); err != nil {
