@@ -37,8 +37,9 @@ func MockRoundTripperQueue(t *testing.T, queue []MockRoundTripFunc) http.RoundTr
 }
 
 type ExpectedTestRequest struct {
-	Method string
-	Path   string
+	Method    string
+	Path      string
+	Validator func(r *http.Request) error
 }
 
 type TestResponse interface {
@@ -53,9 +54,9 @@ type TestResponseFile struct {
 func (f *TestResponseFile) CreateResponse() (*http.Response, error) {
 	file, err := os.Open(f.FilePath)
 	if err != nil {
-		return nil, fmt.Errorf("Response Body File Not Found: %s", f.FilePath)
+		return nil, fmt.Errorf("response body file not found: %s", f.FilePath)
 	}
-	defer file.Close()
+	// defer file.Close()
 
 	return &http.Response{
 		StatusCode: f.StatusCode,
@@ -71,6 +72,12 @@ func ServeAndValidate(t *testing.T, r TestResponse, expected ExpectedTestRequest
 
 		if err := Assert(expected.Path, request.URL.Path); err != nil {
 			t.Fatal(err)
+		}
+
+		if expected.Validator != nil {
+			if err := expected.Validator(request); err != nil {
+				t.Fatal(err)
+			}
 		}
 
 		return r.CreateResponse()

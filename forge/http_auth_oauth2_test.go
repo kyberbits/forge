@@ -17,7 +17,7 @@ func TestHTTPAuthOAuth2(t *testing.T) {
 				t,
 				&forgetest.TestResponseFile{
 					StatusCode: http.StatusOK,
-					FilePath:   "test_responses/oauth2_200_access_token.json",
+					FilePath:   "test_files/client/oauth2_200_access_token.json",
 				},
 				forgetest.ExpectedTestRequest{
 					Method: http.MethodPost,
@@ -28,10 +28,43 @@ func TestHTTPAuthOAuth2(t *testing.T) {
 				t,
 				&forgetest.TestResponseFile{
 					StatusCode: http.StatusOK,
-					FilePath:   "test_responses/sample.json",
+					FilePath:   "test_files/client/test.json",
 				},
 				forgetest.ExpectedTestRequest{
 					Method: http.MethodGet,
+					Path:   "/api/test",
+				},
+			),
+			forgetest.ServeAndValidate(
+				t,
+				&forgetest.TestResponseFile{
+					StatusCode: http.StatusOK,
+					FilePath:   "test_files/client/test.json",
+				},
+				forgetest.ExpectedTestRequest{
+					Method: http.MethodGet,
+					Path:   "/api/test",
+				},
+			),
+			forgetest.ServeAndValidate(
+				t,
+				&forgetest.TestResponseFile{
+					StatusCode: http.StatusUnauthorized,
+					FilePath:   "test_files/client/test.json",
+				},
+				forgetest.ExpectedTestRequest{
+					Method: http.MethodGet,
+					Path:   "/api/test",
+				},
+			),
+			forgetest.ServeAndValidate(
+				t,
+				&forgetest.TestResponseFile{
+					StatusCode: http.StatusOK,
+					FilePath:   "test_files/client/oauth2_200_access_token.json",
+				},
+				forgetest.ExpectedTestRequest{
+					Method: http.MethodPost,
 					Path:   "/auth",
 				},
 			),
@@ -39,19 +72,22 @@ func TestHTTPAuthOAuth2(t *testing.T) {
 				t,
 				&forgetest.TestResponseFile{
 					StatusCode: http.StatusOK,
-					FilePath:   "test_responses/sample.json",
+					FilePath:   "test_files/client/test.json",
 				},
 				forgetest.ExpectedTestRequest{
 					Method: http.MethodGet,
-					Path:   "/auth",
+					Path:   "/api/test",
 				},
 			),
 		}),
 	}
 
 	oauth2 := forge.NewHTTPOAuth2(httpClient, forge.HTTPOAuth2GrantPassword{
-		ClientID: "fake-client-id",
-	})
+		ClientID:     "fake-client-id",
+		ClientSecret: "fake-client-secret",
+		Username:     "username",
+		Password:     "password",
+	}, "/auth")
 
 	c := forge.NewHTTPClient(
 		httpClient,
@@ -59,6 +95,16 @@ func TestHTTPAuthOAuth2(t *testing.T) {
 			oauth2,
 		},
 	)
+
+	if err := c.JSONRequest(
+		ctx,
+		http.MethodGet,
+		"/api/test",
+		nil,
+		nil,
+	); err != nil {
+		t.Error(err)
+	}
 
 	if err := c.JSONRequest(
 		ctx,

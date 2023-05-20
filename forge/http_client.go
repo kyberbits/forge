@@ -46,29 +46,29 @@ type HTTPClient struct {
 var ErrHTTPClientShouldRetry = errors.New("")
 
 func (c *HTTPClient) Do(request *http.Request) (*http.Response, error) {
-	for _, middleware := range c.middleware {
-		if err := middleware.ModifyRequest(request); err != nil {
-			return nil, err
-		}
-	}
-
 	const maxAttemptCount = 2
 
 	attemptCount := 0
 
 	var response *http.Response
 
+	var responseErr error
+
 	for attemptCount < maxAttemptCount {
 		attemptCount++
 
-		var err error
+		shouldRetry := false
 
-		response, err = c.httpClient.Do(request)
-		if err != nil {
-			return nil, err
+		for _, middleware := range c.middleware {
+			if err := middleware.ModifyRequest(request); err != nil {
+				return nil, err
+			}
 		}
 
-		shouldRetry := false
+		response, responseErr = c.httpClient.Do(request)
+		if responseErr != nil {
+			return nil, responseErr
+		}
 
 		for _, middleware := range c.middleware {
 			if err := middleware.CheckResponse(response); err != nil {
