@@ -26,7 +26,7 @@ func TestGenerate(t *testing.T) {
 	_ = TestUser{}.secret
 
 	type args struct {
-		goStructs []interface{}
+		goStructs map[string]interface{}
 	}
 
 	tests := []struct {
@@ -37,13 +37,13 @@ func TestGenerate(t *testing.T) {
 		{
 			name: "basic test",
 			args: args{
-				goStructs: []interface{}{
-					TestUser{},
+				goStructs: map[string]interface{}{
+					"TestUserCustomizedByMap": TestUser{},
 				},
 			},
 			want: Interfaces{
 				{
-					Name: "TestUser",
+					Name: "TestUserCustomizedByMap",
 					Fields: []Field{
 						{
 							Name: "id",

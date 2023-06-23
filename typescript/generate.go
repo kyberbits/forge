@@ -6,14 +6,14 @@ import (
 	"strings"
 )
 
-func Generate(goStructs []interface{}) Interfaces {
+func Generate(goStructs map[string]interface{}) Interfaces {
 	tsInterfaces := Interfaces{}
 
-	for _, goStruct := range goStructs {
+	for nameFromMap, goStruct := range goStructs {
 		rv := reflect.ValueOf(goStruct)
 
 		tsInterface := Interface{
-			Name: rv.Type().Name(),
+			Name: nameFromMap,
 		}
 
 		for i := 0; i < rv.NumField(); i++ {
