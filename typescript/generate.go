@@ -2,7 +2,6 @@ package typescript
 
 import (
 	"reflect"
-	"regexp"
 	"strings"
 )
 
@@ -79,25 +78,32 @@ func getTSFieldType(goFieldType string, tag jsonFieldTag) string {
 }
 
 func TranslateReflectTypeString(reflectTypeString string) string {
+	isSlice := strings.HasPrefix(reflectTypeString, "[]")
+	if isSlice {
+		reflectTypeString = strings.TrimPrefix(reflectTypeString, "[]")
+	}
+
+	tsType := translateReflectTypeString(reflectTypeString)
+	if isSlice {
+		tsType += "[]"
+	}
+
+	return tsType
+}
+
+func translateReflectTypeString(reflectTypeString string) string {
 	switch reflectTypeString {
 	case "interface {}":
 		return "any"
 	case "int", "int8", "int16", "int32", "int64":
 		return "number"
-	case "[]int", "[]int8", "[]int16", "[]int32", "[]int64":
-		return "number[]"
 	case "uint", "uint8", "uint16", "uint32", "uint64", "float", "float32", "float64":
 		return "number"
-	case "[]uint", "[]uint8", "[]uint16", "[]uint32", "[]uint64", "[]float", "[]float32", "[]float64":
-		return "number[]"
 	case "bool":
 		return "boolean"
 	case "time.Time":
 		return "string"
 	}
 
-	re := regexp.MustCompile(`(?m)^(\[\])?(\w+\.)?(\w+)$`)
-	x := re.FindStringSubmatch(reflectTypeString)
-
-	return x[3] + x[1]
+	return reflectTypeString
 }
