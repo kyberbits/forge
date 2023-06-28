@@ -84,8 +84,12 @@ func TranslateReflectTypeString(reflectTypeString string) string {
 		return "any"
 	case "int", "int8", "int16", "int32", "int64":
 		return "number"
+	case "[]int", "[]int8", "[]int16", "[]int32", "[]int64":
+		return "number[]"
 	case "uint", "uint8", "uint16", "uint32", "uint64", "float", "float32", "float64":
 		return "number"
+	case "[]uint", "[]uint8", "[]uint16", "[]uint32", "[]uint64", "[]float", "[]float32", "[]float64":
+		return "number[]"
 	case "bool":
 		return "boolean"
 	case "time.Time":

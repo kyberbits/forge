@@ -7,18 +7,19 @@ import (
 )
 
 type TestUser struct {
-	ID        uint   `json:"id"`
-	Name      string `json:"name"`
-	Age       int
-	Score     int    `json:"score,string"`
-	Admin     bool   `json:"admin,omitempty"`
-	Password  string `json:"-"`
-	Roles     []string
-	VoteCount uint64
-	CreatedAt time.Time
-	DeletedAt *time.Time
-	secret    string
-	Data      interface{}
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Age         int
+	Score       int    `json:"score,string"`
+	Admin       bool   `json:"admin,omitempty"`
+	Password    string `json:"-"`
+	Roles       []string
+	VoteCount   uint64
+	CreatedAt   time.Time
+	DeletedAt   *time.Time
+	secret      string
+	Data        interface{}
+	NumberSlice []uint64 `json:"numberSlice,omitempty"`
 }
 
 func TestGenerate(t *testing.T) {
@@ -86,6 +87,11 @@ func TestGenerate(t *testing.T) {
 						{
 							Name: "Data",
 							Type: "any",
+						},
+						{
+							Name:     "numberSlice",
+							Type:     "number[]",
+							Optional: true,
 						},
 					},
 				},
