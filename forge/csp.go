@@ -8,6 +8,7 @@ import (
 type CSP struct {
 	Default []string
 	Script  []string
+	Image   []string
 	Connect []string
 	Frame   []string
 }
@@ -28,6 +29,10 @@ func (csp CSP) String() string {
 
 	if len(csp.Frame) > 0 {
 		result += fmt.Sprintf("frame-src %s;", strings.Join(csp.Frame, " "))
+	}
+
+	if len(csp.Image) > 0 {
+		result += fmt.Sprintf("image-src %s;", strings.Join(csp.Image, " "))
 	}
 
 	return result
