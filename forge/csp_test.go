@@ -25,9 +25,13 @@ func TestCSPFull(t *testing.T) {
 			"'self'",
 			"example.com",
 		},
+		Image: []string{
+			"'self'",
+			"example.com",
+		},
 	}
 
-	expected := "default-src 'self' example.com;script-src 'self' example.com;connect-src 'self' example.com;frame-src 'self' example.com;"
+	expected := "default-src 'self' example.com;script-src 'self' example.com;connect-src 'self' example.com;frame-src 'self' example.com;image-src 'self' example.com;"
 	if err := forgetest.Assert(expected, csp.String()); err != nil {
 		t.Error(err)
 	}
