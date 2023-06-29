@@ -103,6 +103,11 @@ func translateReflectTypeString(reflectTypeString string) string {
 		return "boolean"
 	case "time.Time":
 		return "string"
+	default:
+		// If not detected above, assume this is a custom struct. Trim the package name
+		if i := strings.LastIndex(reflectTypeString, "."); i >= 0 {
+			return reflectTypeString[i+1:]
+		}
 	}
 
 	return reflectTypeString
