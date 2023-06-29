@@ -32,7 +32,7 @@ func (csp CSP) String() string {
 	}
 
 	if len(csp.Image) > 0 {
-		result += fmt.Sprintf("image-src %s;", strings.Join(csp.Image, " "))
+		result += fmt.Sprintf("img-src %s;", strings.Join(csp.Image, " "))
 	}
 
 	return result
