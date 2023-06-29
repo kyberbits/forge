@@ -6,25 +6,34 @@ import (
 	"time"
 )
 
+type TestCustomStruct struct {
+	ID            uint64 `json:"id"`
+	secret        string
+	AnotherSecret string    `json:"-"`
+	Slice         []float32 `json:"slice"`
+}
+
 type TestUser struct {
-	ID          uint   `json:"id"`
-	Name        string `json:"name"`
-	Age         int
-	Score       int    `json:"score,string"`
-	Admin       bool   `json:"admin,omitempty"`
-	Password    string `json:"-"`
-	Roles       []string
-	VoteCount   uint64
-	CreatedAt   time.Time
-	DeletedAt   *time.Time
-	secret      string
-	Data        interface{}
-	NumberSlice []uint64 `json:"numberSlice,omitempty"`
+	ID               uint   `json:"id"`
+	Name             string `json:"name"`
+	Age              int
+	Score            int    `json:"score,string"`
+	Admin            bool   `json:"admin,omitempty"`
+	Password         string `json:"-"`
+	Roles            []string
+	VoteCount        uint64
+	CreatedAt        time.Time
+	DeletedAt        *time.Time
+	secret           string
+	Data             interface{}
+	NumberSlice      []uint64 `json:"numberSlice,omitempty"`
+	TestCustomStruct TestCustomStruct
 }
 
 func TestGenerate(t *testing.T) {
 	// Unexported fields should not be used
 	_ = TestUser{}.secret
+	_ = TestUser{}.TestCustomStruct.secret
 
 	type args struct {
 		goStructs map[string]interface{}
@@ -92,6 +101,10 @@ func TestGenerate(t *testing.T) {
 							Name:     "numberSlice",
 							Type:     "number[]",
 							Optional: true,
+						},
+						{
+							Name: "TestCustomStruct",
+							Type: "TestCustomStruct",
 						},
 					},
 				},
