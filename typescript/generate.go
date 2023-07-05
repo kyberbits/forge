@@ -1,6 +1,7 @@
 package typescript
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -28,6 +29,15 @@ func Generate(goStructs map[string]interface{}) Interfaces {
 				continue
 			}
 
+			// Maps need additional handling
+			if valueField.Kind() == reflect.Map {
+				tsInterface.Fields = append(
+					tsInterface.Fields,
+					genTSMapField(typeField.Name, valueField, tag))
+
+				continue
+			}
+
 			tsInterface.Fields = append(
 				tsInterface.Fields,
 				genTSField(
@@ -42,6 +52,27 @@ func Generate(goStructs map[string]interface{}) Interfaces {
 	}
 
 	return tsInterfaces
+}
+
+func genTSMapField(goFieldName string, mapField reflect.Value, tag jsonFieldTag) Field {
+	tsField := Field{}
+	tsField.Name = getTSFieldName(goFieldName, tag)
+
+	mapIndex := TranslateReflectTypeString(mapField.Type().Key().String())
+	mapValue := TranslateReflectTypeString(mapField.Type().Elem().String())
+
+	if strings.HasPrefix(mapValue, "*") {
+		mapValue = strings.TrimPrefix(mapValue, "*")
+		mapValue += " | null"
+	}
+
+	tsField.Type = fmt.Sprintf("Record<%s, %s>", mapIndex, mapValue)
+
+	if tag.Omitempty {
+		tsField.Optional = true
+	}
+
+	return tsField
 }
 
 func genTSField(goFieldName string, goFieldType string, tag jsonFieldTag) Field {
