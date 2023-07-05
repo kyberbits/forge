@@ -28,6 +28,10 @@ type TestUser struct {
 	Data             interface{}
 	NumberSlice      []uint64 `json:"numberSlice,omitempty"`
 	TestCustomStruct TestCustomStruct
+	MapAny           map[string]any
+	MapNumber        map[uint64]float32 `json:",omitempty"`
+	MapNumberSlice   map[string][]int32
+	MapPointer       map[string]*string
 }
 
 func TestGenerate(t *testing.T) {
@@ -105,6 +109,23 @@ func TestGenerate(t *testing.T) {
 						{
 							Name: "TestCustomStruct",
 							Type: "TestCustomStruct",
+						},
+						{
+							Name: "MapAny",
+							Type: "Record<string, any>",
+						},
+						{
+							Name:     "MapNumber",
+							Type:     "Record<number, number>",
+							Optional: true,
+						},
+						{
+							Name: "MapNumberSlice",
+							Type: "Record<string, number[]>",
+						},
+						{
+							Name: "MapPointer",
+							Type: "Record<string, string | null>",
 						},
 					},
 				},
