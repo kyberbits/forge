@@ -1,4 +1,4 @@
-.PHONY: full build test test-go lint lint-go fix fix-go docs-go clean
+.PHONY: full build test test-go lint lint-go fix fix-go watch clean docs-go
 
 SHELL=/bin/bash -o pipefail
 $(shell git config core.hooksPath ops/git-hooks)
@@ -27,8 +27,8 @@ lint: lint-go
 lint-go:
 	go get -d ./...
 	go mod tidy
-	[ -f var/golangci-lint ] || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b var/ v1.52.2
-	./var/golangci-lint run ./...
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	golangci-lint run ./...
 
 ## Fix the project
 fix: fix-go
@@ -36,14 +36,16 @@ fix: fix-go
 fix-go:
 	go mod tidy
 	gofmt -s -w .
-	goimports -w .
 
-## Run the godoc server
-docs-go:
-	go install golang.org/x/tools/cmd/godoc@latest
-	@echo "listening on http://127.0.0.1:6060/pkg/github.com/kyberbits/forge"
-	godoc -http=127.0.0.1:6060
+## Watch the project
+watch:
 
 ## Clean the project
 clean:
 	git clean -Xdff --exclude="!.env*local"
+
+## Run the docs server for the project
+docs-go:
+	@go install golang.org/x/tools/cmd/godoc@latest
+	@echo "listening on http://127.0.0.1:6060/pkg/github.com/kyberbits/forge"
+	@godoc -http=127.0.0.1:6060

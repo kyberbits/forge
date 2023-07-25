@@ -38,7 +38,7 @@ func EnvironmentSetValueInFile(filePath, key string, value string) {
 	}
 	defer f.Close()
 
-	if _, err := f.Write([]byte(newFileContents)); err != nil {
+	if _, err := f.WriteString(newFileContents); err != nil {
 		panic(err)
 	}
 }

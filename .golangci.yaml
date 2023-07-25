@@ -26,6 +26,7 @@ linters:
     - structcheck
     - varcheck
     # Don't care for
+    - depguard
     - dupl
     - exhaustive
     - exhaustruct
@@ -48,3 +49,9 @@ linters:
     - goerr113
     - gomnd
     - maintidx
+
+linters-settings:
+  revive:
+    rules:
+      - name: unexported-return
+        disabled: true
