@@ -2,7 +2,6 @@ package forge
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -10,11 +9,13 @@ import (
 	"os"
 	"os/exec"
 	"time"
+
+	"github.com/aaronellington/environment-go/environment"
 )
 
 func NewRuntime() *Runtime {
 	return &Runtime{
-		Environment: NewEnvironment(),
+		Environment: environment.New(),
 		FS:          os.DirFS("."),
 		Stdout:      os.Stdout,
 		Stderr:      os.Stderr,
@@ -23,7 +24,7 @@ func NewRuntime() *Runtime {
 }
 
 type Runtime struct {
-	Environment Environment
+	Environment *environment.Environment
 	Stdout      io.Writer
 	Stderr      io.Writer
 	Stdin       io.Reader
@@ -37,43 +38,6 @@ func (runtime *Runtime) Execute(name string, args ...string) error {
 	cmd.Stdout = runtime.Stdout
 
 	return cmd.Run()
-}
-
-func (runtime *Runtime) ReadInDefaultEnvironmentFiles() error {
-	defaultFiles := []string{
-		// Values already set in the Environment will not be changed
-		".env.local", // Not tracked in git, first priority
-		".env",       // Defaults if not set other
-	}
-
-	for _, defaultFile := range defaultFiles {
-		if err := runtime.ReadInEnvironmentFile(defaultFile); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (runtime *Runtime) ReadInEnvironmentFile(fileName string) error {
-	file, err := runtime.FS.Open(fileName)
-	if err != nil {
-		// File does not exist errors are okay
-		if errors.Is(err, os.ErrNotExist) {
-			return nil
-		}
-
-		return err
-	}
-
-	fileContentBytes, err := io.ReadAll(file)
-	if err != nil {
-		return err
-	}
-
-	fileContents := string(fileContentBytes)
-
-	return runtime.Environment.ImportEnvFileContents(fileContents)
 }
 
 func (runtime *Runtime) KeepRunning(ctx context.Context, app App, action func(ctx context.Context), coolDown time.Duration) {
