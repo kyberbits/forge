@@ -25,6 +25,7 @@ func Parse(stBytes []byte) StackTrace {
 
 		if lineNumber == 0 {
 			st.Name = line
+
 			continue
 		}
 
