@@ -3,8 +3,6 @@ package forge
 import (
 	"net/http"
 	"time"
-
-	"github.com/kyberbits/forge/forgeutils"
 )
 
 type HTTPLogger struct {
@@ -17,7 +15,6 @@ func (httpLogger *HTTPLogger) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		ResponseWriter: w,
 		ResponseCode:   200,
 	}
-	r = forgeutils.ContextAddToRequest(r)
 
 	startTime := time.Now()
 

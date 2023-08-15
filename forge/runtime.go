@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/aaronellington/environment-go/environment"
+	"github.com/kyberbits/forge/forgeutils"
 )
 
 func NewRuntime() *Runtime {
@@ -70,9 +71,14 @@ func (runtime *Runtime) KeepRunning(ctx context.Context, app App, action func(ct
 func (runtime *Runtime) Serve(ctx context.Context, app App) error {
 	go runtime.KeepRunning(ctx, app, app.Background, time.Second*5)
 
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r = forgeutils.ContextAddToRequest(r)
+		PanicReportTimeoutHandler(app.Handler(), time.Second*5, app.Logger()).ServeHTTP(w, r)
+	})
+
 	httpServer := &http.Server{
 		Addr:         app.ListenAddress(),
-		Handler:      http.TimeoutHandler(app.Handler(), time.Second*30, "Timeout"),
+		Handler:      handler,
 		ErrorLog:     app.Logger().StandardLogger(),
 		ReadTimeout:  time.Second * 30,
 		WriteTimeout: time.Second * 30,
