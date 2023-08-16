@@ -73,7 +73,7 @@ func (runtime *Runtime) Serve(ctx context.Context, app App) error {
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r = forgeutils.ContextAddToRequest(r)
-		PanicReportTimeoutHandler(app.Handler(), time.Second*5, app.Logger()).ServeHTTP(w, r)
+		PanicReportTimeoutHandler(app.Handler(), time.Second*30, app.Logger()).ServeHTTP(w, r)
 	})
 
 	httpServer := &http.Server{
