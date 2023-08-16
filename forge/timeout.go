@@ -19,27 +19,33 @@ type panicReporterHandler struct {
 }
 
 func (h *panicReporterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	startTime := time.Now()
+
 	defer func() {
 		if err := recover(); err != nil {
+			// Fix the stack trace
+			const size = 64 << 10
+			buf := make([]byte, size)
+			buf = buf[:runtime.Stack(buf, false)]
+
 			if err == http.ErrAbortHandler {
 				h.logger.Warning(r.Context(), "HTTP Timeout", map[string]any{
-					"path": r.URL.Path,
-					"err":  err,
+					"err":      err,
+					"method":   r.Method,
+					"path":     r.URL.Path,
+					"duration": uint64(time.Since(startTime).Seconds()),
+					"stack":    stackparse.Parse(buf),
 				})
 
 				return
 			}
 
-			// debug.Stack()
-
-			// // Fix the stack trace
-			const size = 64 << 10
-			buf := make([]byte, size)
-			buf = buf[:runtime.Stack(buf, false)]
-
 			h.logger.Error(r.Context(), "HTTP Panic", map[string]any{
-				"err":   err,
-				"stack": stackparse.Parse(buf),
+				"err":      err,
+				"method":   r.Method,
+				"path":     r.URL.Path,
+				"duration": uint64(time.Since(startTime).Seconds()),
+				"stack":    stackparse.Parse(buf),
 			})
 		}
 	}()
