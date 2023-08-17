@@ -2,6 +2,7 @@ package forge
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"runtime"
 	"time"
@@ -23,25 +24,24 @@ func (h *panicReporterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	startTime := time.Now()
 
 	defer func() {
-		if err := recover(); err != nil {
+		if panicValue := recover(); panicValue != nil {
 			// Fix the stack trace
 			const size = 64 << 10
 			buf := make([]byte, size)
 			buf = buf[:runtime.Stack(buf, false)]
 
-			if err == http.ErrAbortHandler {
-				h.logger.Warning(r.Context(), "HTTP Timeout", map[string]any{
-					"err":      err,
+			err, isErr := panicValue.(error)
+			if !isErr {
+				h.logger.Error(r.Context(), "HTTP Panic (Value)", map[string]any{
+					"value":    panicValue,
 					"method":   r.Method,
 					"path":     r.URL.Path,
 					"duration": uint64(time.Since(startTime).Seconds()),
 					"stack":    stackparse.Parse(buf),
 				})
-
-				return
 			}
 
-			if err == context.Canceled {
+			if errors.Is(err, context.Canceled) {
 				h.logger.Warning(r.Context(), "Context Canceled", map[string]any{
 					"err":      err,
 					"method":   r.Method,
@@ -52,7 +52,19 @@ func (h *panicReporterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 				return
 			}
 
-			h.logger.Error(r.Context(), "HTTP Panic", map[string]any{
+			if errors.Is(err, http.ErrAbortHandler) {
+				h.logger.Error(r.Context(), "HTTP Timeout", map[string]any{
+					"err":      err,
+					"method":   r.Method,
+					"path":     r.URL.Path,
+					"duration": uint64(time.Since(startTime).Seconds()),
+					"stack":    stackparse.Parse(buf),
+				})
+
+				return
+			}
+
+			h.logger.Error(r.Context(), "HTTP Panic (Error)", map[string]any{
 				"err":      err,
 				"method":   r.Method,
 				"path":     r.URL.Path,
