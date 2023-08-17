@@ -1,6 +1,7 @@
 package forge
 
 import (
+	"context"
 	"net/http"
 	"runtime"
 	"time"
@@ -35,6 +36,17 @@ func (h *panicReporterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 					"path":     r.URL.Path,
 					"duration": uint64(time.Since(startTime).Seconds()),
 					"stack":    stackparse.Parse(buf),
+				})
+
+				return
+			}
+
+			if err == context.Canceled {
+				h.logger.Warning(r.Context(), "Context Canceled", map[string]any{
+					"err":      err,
+					"method":   r.Method,
+					"path":     r.URL.Path,
+					"duration": uint64(time.Since(startTime).Seconds()),
 				})
 
 				return
