@@ -8,9 +8,11 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 	"time"
 
 	"github.com/aaronellington/environment-go/environment"
+	"github.com/kyberbits/forge/forge/internal/stackparse"
 	"github.com/kyberbits/forge/forgeutils"
 )
 
@@ -32,28 +34,35 @@ type Runtime struct {
 	FS          fs.FS
 }
 
-func (runtime *Runtime) Execute(name string, args ...string) error {
+func (r *Runtime) Execute(name string, args ...string) error {
 	cmd := exec.Command(name, args...)
-	cmd.Stderr = runtime.Stderr
-	cmd.Stdin = runtime.Stdin
-	cmd.Stdout = runtime.Stdout
+	cmd.Stderr = r.Stderr
+	cmd.Stdin = r.Stdin
+	cmd.Stdout = r.Stdout
 
 	return cmd.Run()
 }
 
-func (runtime *Runtime) KeepRunning(ctx context.Context, app App, action func(ctx context.Context), coolDown time.Duration) {
+func (r *Runtime) KeepRunning(ctx context.Context, app App, action func(ctx context.Context), coolDown time.Duration) {
 	ticker := time.NewTicker(coolDown)
 
 	tickFunc := func() {
 		defer func() {
-			if r := recover(); r != nil {
-				if err, ok := r.(error); ok {
-					app.Logger().Error(ctx, "Panic Err", map[string]any{
-						"err": err,
+			if panicValue := recover(); panicValue != nil {
+				// Fix the stack trace
+				const size = 64 << 10
+				buf := make([]byte, size)
+				buf = buf[:runtime.Stack(buf, false)]
+
+				if err, ok := panicValue.(error); ok {
+					app.Logger().Error(ctx, "Panic - KeepRunning (Err)", map[string]any{
+						"err":   err,
+						"stack": stackparse.Parse(buf),
 					})
 				} else {
-					app.Logger().Error(ctx, "Panic Err", map[string]any{
-						"err": r,
+					app.Logger().Error(ctx, "Panic - KeepRunning (Value)", map[string]any{
+						"value": panicValue,
+						"stack": stackparse.Parse(buf),
 					})
 				}
 			}
@@ -68,8 +77,8 @@ func (runtime *Runtime) KeepRunning(ctx context.Context, app App, action func(ct
 	}
 }
 
-func (runtime *Runtime) Serve(ctx context.Context, app App) error {
-	go runtime.KeepRunning(ctx, app, app.Background, time.Second*5)
+func (r *Runtime) Serve(ctx context.Context, app App) error {
+	go r.KeepRunning(ctx, app, app.Background, time.Second*5)
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r = forgeutils.ContextAddToRequest(r)
