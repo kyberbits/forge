@@ -80,9 +80,11 @@ func (r *Runtime) KeepRunning(ctx context.Context, app App, action func(ctx cont
 func (r *Runtime) Serve(ctx context.Context, app App) error {
 	go r.KeepRunning(ctx, app, app.Background, time.Second*5)
 
+	appHandler := app.Handler()
+
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r = forgeutils.ContextAddToRequest(r)
-		PanicReportTimeoutHandler(app.Handler(), time.Second*30, app.Logger()).ServeHTTP(w, r)
+		PanicReportTimeoutHandler(appHandler, time.Second*30, app.Logger()).ServeHTTP(w, r)
 	})
 
 	httpServer := &http.Server{
