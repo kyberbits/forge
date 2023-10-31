@@ -19,7 +19,7 @@ type LogSupplementerFunc func(
 
 type LoggerErrorExtrasAdder interface {
 	error
-	AddExtras(map[string]any)
+	AddExtras(extras map[string]any)
 }
 
 func NewLogger(
